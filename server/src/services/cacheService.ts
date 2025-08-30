@@ -7,6 +7,11 @@ export class CacheService {
   private nodeCache: NodeCache;
   private redisClient: RedisClientType | null = null;
   private useRedis: boolean = false;
+  private stats = {
+    hits: 0,
+    misses: 0,
+    errors: 0
+  };
 
   constructor() {
     this.nodeCache = new NodeCache({ 
@@ -43,6 +48,7 @@ export class CacheService {
       if (this.useRedis && this.redisClient) {
         const cached = await this.redisClient.get(key);
         if (cached) {
+          this.stats.hits++;
           const data = JSON.parse(cached);
           data.lastUpdated = new Date(data.lastUpdated);
           return data;
@@ -50,10 +56,13 @@ export class CacheService {
       } else {
         const cached = this.nodeCache.get<TrendingData>(key);
         if (cached) {
+          this.stats.hits++;
           return cached;
         }
       }
+      this.stats.misses++;
     } catch (error) {
+      this.stats.errors++;
       console.error('Cache get error:', error);
     }
     
@@ -133,6 +142,75 @@ export class CacheService {
 
   private getCacheKey(keyword: string): string {
     return `trending:${keyword.toLowerCase().replace(/\s+/g, '_')}`;
+  }
+
+  getStats() {
+    const hitRate = this.stats.hits + this.stats.misses > 0 
+      ? (this.stats.hits / (this.stats.hits + this.stats.misses) * 100).toFixed(2) 
+      : '0';
+    
+    return {
+      ...this.stats,
+      hitRate: `${hitRate}%`,
+      cacheType: this.useRedis ? 'Redis' : 'NodeCache'
+    };
+  }
+
+  resetStats() {
+    this.stats = { hits: 0, misses: 0, errors: 0 };
+  }
+
+  async getCacheInfo() {
+    try {
+      if (this.useRedis && this.redisClient) {
+        const keys = await this.redisClient.keys('trending:*');
+        const cacheInfo = [];
+        
+        for (const key of keys) {
+          const ttl = await this.redisClient.ttl(key);
+          const keyword = key.replace('trending:', '').replace(/_/g, ' ');
+          cacheInfo.push({
+            keyword,
+            expiresIn: ttl > 0 ? `${Math.floor(ttl / 60)} minutes` : 'expired',
+            key
+          });
+        }
+        
+        return {
+          cacheType: 'Redis',
+          totalKeys: keys.length,
+          keys: cacheInfo
+        };
+      } else {
+        const keys = this.nodeCache.keys();
+        const cacheInfo = keys.map(key => {
+          const ttl = this.nodeCache.getTtl(key);
+          const keyword = key.replace('trending:', '').replace(/_/g, ' ');
+          const now = Date.now();
+          const expiresIn = ttl ? Math.floor((ttl - now) / 60000) : 0;
+          
+          return {
+            keyword,
+            expiresIn: expiresIn > 0 ? `${expiresIn} minutes` : 'expired',
+            key
+          };
+        });
+        
+        return {
+          cacheType: 'NodeCache',
+          totalKeys: keys.length,
+          keys: cacheInfo
+        };
+      }
+    } catch (error) {
+      console.error('Error getting cache info:', error);
+      return {
+        cacheType: this.useRedis ? 'Redis' : 'NodeCache',
+        totalKeys: 0,
+        keys: [],
+        error: 'Failed to retrieve cache information'
+      };
+    }
   }
 
   async disconnect(): Promise<void> {

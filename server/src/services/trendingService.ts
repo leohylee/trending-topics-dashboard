@@ -119,6 +119,14 @@ export class TrendingService {
     };
   }
 
+  getCacheStats() {
+    return this.cacheService.getStats();
+  }
+
+  async getCacheInfo() {
+    return await this.cacheService.getCacheInfo();
+  }
+
   async disconnect(): Promise<void> {
     await this.cacheService.disconnect();
   }

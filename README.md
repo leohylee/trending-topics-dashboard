@@ -77,11 +77,58 @@ NODE_ENV=development
 4. **Refresh**: Manual refresh button (rate-limited in production)
 5. **Explore**: Click topics to search on Google
 
+## Server Architecture
+
+### 📁 Directory Structure
+```
+server/src/
+├── index.ts              # Express server setup & entry point
+├── config/               # Configuration & environment variables
+├── routes/               # API endpoint definitions
+├── controllers/          # Request/response handlers
+├── services/             # Business logic & external integrations
+├── middleware/           # Request processing (errors, rate limiting)
+└── types/                # TypeScript type definitions
+```
+
+### 🔄 Request Flow
+```
+Client → Routes → Controller → Service → Cache/OpenAI → Response
+```
+
+1. **Routes** define API endpoints and map to controller methods
+2. **Controllers** handle HTTP requests, validate input, call services
+3. **Services** implement business logic:
+   - `TrendingService`: Orchestrates cache-first strategy
+   - `CacheService`: Redis/NodeCache with hit/miss tracking  
+   - `OpenAIService`: ChatGPT API integration
+4. **Middleware** processes requests (CORS, errors, rate limiting)
+
+### 🧠 Cache-First Strategy
+```typescript
+// 1. Check cache for all keywords first
+const cachedData = await cacheService.getMultiple(keywords);
+
+// 2. Only call OpenAI for uncached keywords  
+const uncachedKeywords = keywords.filter(k => !cachedData.has(k));
+
+// 3. Combine cached + fresh results
+if (uncachedKeywords.length > 0) {
+  const freshData = await openaiService.getTrendingTopics(uncachedKeywords);
+  await cacheService.setMultiple(freshData); // Cache for next time
+}
+```
+
 ## API Endpoints
 
-- `GET /api/trending?keywords=tech,science` - Get trending topics
-- `POST /api/trending/refresh` - Force refresh (rate limited)
-- `GET /api/health` - Health check
+### Core Endpoints
+- `GET /api/trending?keywords=tech,science` - Get trending topics (cache-first)
+- `POST /api/trending/refresh` - Force refresh bypassing cache (rate limited)
+- `GET /api/health` - Server health check
+
+### Cache Management
+- `GET /api/cache/stats` - Cache hit/miss statistics & performance
+- `GET /api/cache/info` - View cached keywords & expiration times
 
 ## Configuration
 

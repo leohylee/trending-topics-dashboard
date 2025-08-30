@@ -1,14 +1,6 @@
-import axios from 'axios';
+import OpenAI from 'openai';
 import { config } from '../config';
 import { TrendingTopic } from '../types';
-
-interface OpenAIResponse {
-  choices: Array<{
-    message: {
-      content: string;
-    };
-  }>;
-}
 
 interface KeywordTopics {
   keyword: string;
@@ -16,43 +8,35 @@ interface KeywordTopics {
 }
 
 export class OpenAIService {
-  private apiKey: string;
-  private baseUrl = 'https://api.openai.com/v1';
+  private openai: OpenAI;
 
   constructor() {
-    this.apiKey = config.openaiApiKey;
+    this.openai = new OpenAI({
+      apiKey: config.openaiApiKey,
+    });
   }
 
   async getTrendingTopics(keywords: string[], maxResults: number = 5): Promise<KeywordTopics[]> {
     try {
       const prompt = this.buildPrompt(keywords, maxResults);
       
-      const response = await axios.post<OpenAIResponse>(
-        `${this.baseUrl}/chat/completions`,
-        {
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a trending topics analyst. Provide current, relevant trending topics with concise summaries.'
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 2000
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a trending topics analyst. Provide current, relevant trending topics with concise summaries.'
+          },
+          {
+            role: 'user',
+            content: prompt
           }
-        }
-      );
+        ],
+        temperature: 0.7,
+        max_tokens: 2000
+      });
 
-      const content = response.data.choices[0]?.message?.content;
+      const content = completion.choices[0]?.message?.content;
       if (!content) {
         throw new Error('No content received from OpenAI API');
       }

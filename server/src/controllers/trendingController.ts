@@ -93,4 +93,30 @@ export class TrendingController {
       next(error);
     }
   };
+
+  getCacheStats = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      const stats = this.trendingService.getCacheStats();
+      res.json({
+        success: true,
+        data: stats,
+        message: 'Cache statistics retrieved successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  getCacheInfo = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      const info = await this.trendingService.getCacheInfo();
+      res.json({
+        success: true,
+        data: info,
+        message: 'Cache information retrieved successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
