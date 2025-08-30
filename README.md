@@ -7,6 +7,7 @@ A customizable dashboard application that displays trending topics for user-defi
 - **Customizable Dashboard**: Drag-and-drop grid layout with resizable sections
 - **AI-Powered Content**: ChatGPT API integration for trending topic discovery
 - **Smart Caching**: 1-hour cache duration with automatic refresh
+- **Dark Mode**: Toggle between light and dark themes with persistence
 - **Responsive Design**: Works on mobile, tablet, and desktop
 - **Rate Limiting**: Configurable refresh limits (disabled in development)
 - **Batch Processing**: Efficient single API call for all keywords

@@ -3,6 +3,7 @@ import { Responsive, WidthProvider } from 'react-grid-layout';
 import { RefreshCw, Settings, Plus } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
 import { SettingsModal } from './SettingsModal';
+import { ThemeToggle } from './ThemeToggle';
 import { useTrending, useRefreshTrending } from '../hooks/useTrending';
 import { Section, TrendingData } from '../types';
 import { storage } from '../utils/storage';
@@ -114,25 +115,26 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Trending Topics Dashboard
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Trending Topics
             </h1>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <button
                 onClick={handleRefresh}
                 disabled={refreshMutation.isPending || isLoading}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
               >
                 <RefreshCw size={16} className={refreshMutation.isPending ? 'animate-spin' : ''} />
                 Refresh
               </button>
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
               >
                 <Plus size={16} />
                 Add Section
@@ -145,12 +147,12 @@ export const Dashboard: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {sections.length === 0 ? (
           <div className="text-center py-12">
-            <Settings size={48} className="mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No sections configured</h3>
-            <p className="text-gray-600 mb-6">Add your first section to start tracking trending topics</p>
+            <Settings size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No sections configured</h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">Add your first section to start tracking trending topics</p>
             <button
               onClick={() => setShowSettings(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700"
+              className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
             >
               <Plus size={20} />
               Add Section
