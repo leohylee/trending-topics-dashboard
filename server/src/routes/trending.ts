@@ -11,6 +11,8 @@ export const createTrendingRoutes = (): Router => {
   router.get('/health', controller.getHealth);
   router.get('/cache/stats', controller.getCacheStats);
   router.get('/cache/info', controller.getCacheInfo);
+  router.delete('/cache', controller.clearCache);
+  router.delete('/cache/:keyword', controller.clearCacheByKeyword);
 
   return router;
 };

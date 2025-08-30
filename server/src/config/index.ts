@@ -19,7 +19,12 @@ export const config = {
     temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.3'),
     maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '3000'),
     presencePenalty: parseFloat(process.env.OPENAI_PRESENCE_PENALTY || '0.1'),
-    frequencyPenalty: parseFloat(process.env.OPENAI_FREQUENCY_PENALTY || '0.1')
+    frequencyPenalty: parseFloat(process.env.OPENAI_FREQUENCY_PENALTY || '0.1'),
+    // Web Search Configuration
+    webSearch: {
+      enabled: process.env.OPENAI_WEB_SEARCH_ENABLED !== 'false', // Default enabled
+      contextSize: process.env.OPENAI_WEB_SEARCH_CONTEXT_SIZE || 'medium' // high, medium, low
+    }
   }
 };
 

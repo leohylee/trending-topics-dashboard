@@ -119,4 +119,42 @@ export class TrendingController {
       next(error);
     }
   };
+
+  clearCache = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      await this.trendingService.clearCache();
+      res.json({
+        success: true,
+        data: { cleared: true },
+        message: 'Cache cleared successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  clearCacheByKeyword = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      const keyword = req.params.keyword;
+      
+      if (!keyword || keyword.trim().length === 0) {
+        res.status(400).json({
+          success: false,
+          error: 'Keyword parameter is required'
+        });
+        return;
+      }
+
+      const cleanKeyword = keyword.trim();
+      await this.trendingService.clearCacheByKeyword(cleanKeyword);
+      
+      res.json({
+        success: true,
+        data: { keyword: cleanKeyword, cleared: true },
+        message: `Cache cleared for keyword: ${cleanKeyword}`
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

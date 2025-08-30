@@ -127,6 +127,16 @@ export class TrendingService {
     return await this.cacheService.getCacheInfo();
   }
 
+  async clearCache(): Promise<void> {
+    await this.cacheService.clear();
+    console.log('🗑️ Cache cleared successfully');
+  }
+
+  async clearCacheByKeyword(keyword: string): Promise<void> {
+    await this.cacheService.delete(keyword);
+    console.log(`🗑️ Cache cleared for keyword: ${keyword}`);
+  }
+
   async disconnect(): Promise<void> {
     await this.cacheService.disconnect();
   }
