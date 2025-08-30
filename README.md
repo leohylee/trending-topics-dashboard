@@ -1,16 +1,17 @@
 # Trending Topics Dashboard
 
-A customizable dashboard application that displays trending topics for user-defined keywords using AI-powered content aggregation.
+A real-time trending topics dashboard that provides **factual, current information** from the internet using OpenAI's advanced web search capabilities.
 
-## Features
+## 🌟 Key Features
 
-- **Customizable Dashboard**: Drag-and-drop grid layout with resizable sections
-- **AI-Powered Content**: ChatGPT API integration for trending topic discovery
-- **Smart Caching**: 1-hour cache duration with automatic refresh
-- **Dark Mode**: Toggle between light and dark themes with persistence
-- **Responsive Design**: Works on mobile, tablet, and desktop
-- **Rate Limiting**: Configurable refresh limits (disabled in development)
-- **Batch Processing**: Efficient single API call for all keywords
+- **🌐 Real Web Search**: Uses OpenAI Responses API with web search to get **actual current events**
+- **📊 Customizable Dashboard**: Drag-and-drop grid layout with resizable sections  
+- **🤖 AI-Powered Analysis**: Advanced AI processing of real web search results
+- **⚡ Smart Caching**: Intelligent cache management with clearing capabilities
+- **🌙 Dark Mode**: Toggle between light and dark themes with persistence
+- **📱 Responsive Design**: Works perfectly on mobile, tablet, and desktop
+- **🔒 Rate Limiting**: Configurable refresh limits with production safeguards
+- **🗂️ Cache Management**: Full cache control with stats and selective clearing
 
 ## Tech Stack
 
@@ -25,10 +26,12 @@ A customizable dashboard application that displays trending topics for user-defi
 - **Axios** for HTTP client with request/response interceptors
 
 ### Backend
-- Node.js with Express and TypeScript
-- Redis for production caching (node-cache for development)
-- OpenAI API integration
-- CORS and security middleware
+- **Node.js** with Express and TypeScript for robust server architecture
+- **OpenAI Responses API** with web search tool for real-time internet data
+- **Redis** for production caching (node-cache for development)
+- **Advanced JSON Parsing** with multiple fallback strategies  
+- **Cache Management** with statistics and selective clearing
+- **CORS and Security** middleware with comprehensive error handling
 
 ## Quick Start
 
@@ -68,9 +71,20 @@ npm run dev
 Create `server/.env`:
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
-REDIS_URL=redis://localhost:6379  # optional
+REDIS_URL=redis://localhost:6379
 PORT=5000
 NODE_ENV=development
+
+# OpenAI Configuration (Optional - defaults provided)
+OPENAI_MODEL=gpt-4o                    # Required for web search (not gpt-4-turbo)
+OPENAI_TEMPERATURE=0.3
+OPENAI_MAX_TOKENS=3000
+OPENAI_PRESENCE_PENALTY=0.1
+OPENAI_FREQUENCY_PENALTY=0.1
+
+# Web Search Configuration (Optional)
+OPENAI_WEB_SEARCH_ENABLED=true         # Enable/disable web search
+OPENAI_WEB_SEARCH_CONTEXT_SIZE=medium  # high, medium, low
 ```
 
 ## Usage
@@ -96,9 +110,11 @@ NODE_ENV=development
 
 ### ⚙️ Settings & Configuration
 - **Sections**: Add up to 10 keyword-based sections
-- **Results**: Configure 1-10 trending topics per section
+- **Results**: Configure 1-10 trending topics per section  
 - **Layout**: Persistent drag-and-drop arrangement
 - **Theme**: Light/dark mode with system preference detection
+- **Cache**: Clear cache for specific keywords or all data
+- **Web Search**: Get real-time information from the internet
 
 ## Server Architecture
 
@@ -122,9 +138,9 @@ Client → Routes → Controller → Service → Cache/OpenAI → Response
 1. **Routes** define API endpoints and map to controller methods
 2. **Controllers** handle HTTP requests, validate input, call services
 3. **Services** implement business logic:
-   - `TrendingService`: Orchestrates cache-first strategy
-   - `CacheService`: Redis/NodeCache with hit/miss tracking  
-   - `OpenAIService`: ChatGPT API integration
+   - `TrendingService`: Orchestrates cache-first strategy with clearing capabilities
+   - `CacheService`: Redis/NodeCache with hit/miss tracking and management
+   - `OpenAIService`: **OpenAI Responses API with Web Search** integration
 4. **Middleware** processes requests (CORS, errors, rate limiting)
 
 ### 🧠 Cache-First Strategy
@@ -146,12 +162,35 @@ if (uncachedKeywords.length > 0) {
 
 ### Core Endpoints
 - `GET /api/trending?keywords=tech,science` - Get trending topics (cache-first)
-- `POST /api/trending/refresh` - Force refresh bypassing cache (rate limited)
+- `POST /api/trending/refresh` - Force refresh with **real web search** (rate limited)
 - `GET /api/health` - Server health check
 
-### Cache Management
-- `GET /api/cache/stats` - Cache hit/miss statistics & performance
-- `GET /api/cache/info` - View cached keywords & expiration times
+### 🗂️ Cache Management
+- `GET /api/cache/stats` - Cache hit/miss statistics & performance metrics
+- `GET /api/cache/info` - View cached keywords, expiration times, and counts
+- `DELETE /api/cache` - **Clear all cached data**
+- `DELETE /api/cache/{keyword}` - **Clear specific keyword from cache**
+
+## 🌐 Web Search Integration
+
+### How It Works
+This application uses **OpenAI's Responses API with web search tool** to provide real, factual, current information:
+
+1. **Real Web Search**: The AI searches the internet for current news and trends
+2. **Source Verification**: Pulls from reputable sources like CNN, BBC, Reuters, TechCrunch
+3. **Fact-Based Results**: Returns actual events with real dates, names, and figures
+4. **Smart Parsing**: Advanced JSON parsing handles various response formats
+
+### Example Real Results
+Instead of fictional content, you get real trending topics like:
+- **"El Salvador Transfers Bitcoin Reserves to Multiple Addresses for Enhanced Security"** (Aug 29, 2025, $682M worth)
+- **"MLS Breaks Transfer Spending Record with Son Heung-min's Historic Signing"** ($26.5M transfer)
+- **"Microsoft Unveils MAI-Voice-1 and MAI-1-Preview AI Models"** (Aug 28, 2025 announcement)
+
+### Web Search Requirements
+- **Model**: Must use `gpt-4o` or `gpt-4o-mini` (not `gpt-4-turbo`)
+- **API Key**: Standard OpenAI API key with Responses API access
+- **Processing Time**: 20-30 seconds per request for thorough web search
 
 ## Configuration
 
@@ -244,8 +283,28 @@ npm run lint     # ESLint + TypeScript checking
 4. Build both frontend and backend
 5. Configure reverse proxy (nginx recommended)
 
-## Cost Optimization
+## 🔧 Troubleshooting
 
-- **Batch API Calls**: All keywords processed in single ChatGPT request
-- **Smart Caching**: Reduces API calls with 1-hour cache
-- **Rate Limiting**: Prevents excessive refreshes
+### Common Issues
+
+**"Current [Keyword] Development" appearing instead of real topics:**
+- Clear cache: `DELETE /api/cache/keyword` or `DELETE /api/cache`
+- Check model configuration: Ensure using `gpt-4o` (not `gpt-4-turbo`)
+- Retry the request: Web search occasionally takes multiple attempts
+
+**Web search taking too long:**
+- Normal processing time: 20-30 seconds for real web search
+- Check OpenAI API status and rate limits
+- Verify internet connectivity and API key permissions
+
+**Cache not updating:**
+- Use manual refresh: `POST /api/trending/refresh`
+- Clear specific cache: `DELETE /api/cache/{keyword}`
+- Check cache expiration: `GET /api/cache/info`
+
+## 💰 Cost Optimization
+
+- **Individual Processing**: Each keyword gets dedicated web search for accuracy
+- **Smart Caching**: 1-hour cache duration reduces API calls significantly  
+- **Rate Limiting**: Prevents excessive API usage in production
+- **Efficient Parsing**: Multiple fallback strategies minimize failed requests

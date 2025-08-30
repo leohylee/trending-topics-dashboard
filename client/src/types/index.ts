@@ -57,6 +57,13 @@ export interface CacheInfoResponse {
   }>;
 }
 
+export interface CachedTrendingResponse {
+  cachedData: TrendingData[];
+  uncachedKeywords: string[];
+  totalRequested: number;
+  cacheHits: number;
+}
+
 // Request Types
 export interface RefreshRequest {
   keywords: string[];

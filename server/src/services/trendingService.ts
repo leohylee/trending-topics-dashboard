@@ -1,6 +1,6 @@
 import { OpenAIService } from './openaiService';
 import { CacheService } from './cacheService';
-import { TrendingData } from '../types';
+import { TrendingData, CachedTrendingResponse } from '../types';
 import { APP_LIMITS } from '../config';
 
 export class TrendingService {
@@ -55,6 +55,52 @@ export class TrendingService {
     }
 
     return results.sort((a, b) => keywords.indexOf(a.keyword) - keywords.indexOf(b.keyword));
+  }
+
+  async getCachedTopics(keywords: string[]): Promise<CachedTrendingResponse> {
+    if (keywords.length === 0) {
+      return {
+        cachedData: [],
+        uncachedKeywords: [],
+        totalRequested: 0,
+        cacheHits: 0
+      };
+    }
+
+    if (keywords.length > APP_LIMITS.MAX_KEYWORDS) {
+      throw new Error(`Maximum ${APP_LIMITS.MAX_KEYWORDS} keywords allowed`);
+    }
+
+    const cachedData = await this.cacheService.getMultiple(keywords);
+    const validCachedData: TrendingData[] = [];
+    const uncachedKeywords: string[] = [];
+
+    console.log(`🔍 Checking cache for ${keywords.length} keywords...`);
+
+    for (const keyword of keywords) {
+      const cached = cachedData.get(keyword);
+      if (cached && this.isCacheValid(cached)) {
+        console.log(`✅ Cache HIT for keyword: ${keyword}`);
+        validCachedData.push({
+          ...cached,
+          cached: true
+        });
+      } else {
+        console.log(`❌ Cache MISS for keyword: ${keyword}`);
+        uncachedKeywords.push(keyword);
+      }
+    }
+
+    const response: CachedTrendingResponse = {
+      cachedData: validCachedData.sort((a, b) => keywords.indexOf(a.keyword) - keywords.indexOf(b.keyword)),
+      uncachedKeywords,
+      totalRequested: keywords.length,
+      cacheHits: validCachedData.length
+    };
+
+    console.log(`📊 Cache results: ${response.cacheHits}/${response.totalRequested} hits (${Math.round(response.cacheHits / response.totalRequested * 100)}%)`);
+    
+    return response;
   }
 
   async refreshTopics(keywords: string[]): Promise<TrendingData[]> {

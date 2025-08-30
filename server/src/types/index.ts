@@ -22,6 +22,13 @@ export interface RefreshRequest {
   keywords: string[];
 }
 
+export interface CachedTrendingResponse {
+  cachedData: TrendingData[];
+  uncachedKeywords: string[];
+  totalRequested: number;
+  cacheHits: number;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;

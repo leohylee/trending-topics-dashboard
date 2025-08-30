@@ -2,7 +2,7 @@
 
 ## Overview
 
-A single-page web application that allows users to create a customizable dashboard with multiple sections, each displaying trending topics for user-defined keywords using AI-powered content aggregation.
+A real-time trending topics dashboard that provides **factual, current information** from the internet using OpenAI's advanced Responses API with web search capabilities. Users can create customizable dashboard sections that display actual trending events, news, and developments.
 
 ## Core Requirements
 
@@ -28,18 +28,26 @@ A single-page web application that allows users to create a customizable dashboa
 
 ### 2. Content Aggregation
 
-#### AI Integration
-- **API**: ChatGPT API for content discovery and summarization
-- **Batch Processing**: Single API call for all keywords to optimize costs
+#### AI Integration with Real Web Search
+- **API**: **OpenAI Responses API with web_search_preview tool** for **real-time internet search**
+- **Web Search Capability**: Searches actual current sources (CNN, BBC, Reuters, TechCrunch, Twitter/X, Reddit)
+- **Processing Strategy**: Individual keyword processing for maximum accuracy and real data
+- **Model Requirements**: Uses `gpt-4o` or `gpt-4o-mini` (web search not supported on `gpt-4-turbo`)
 - **Content Format**:
-  - Title of trending topic
-  - 2-3 sentence summary (what happened, why significant, impact/next steps)
-  - Maximum 10 topics per keyword
+  - **Real News Headlines**: Actual current events with specific names, dates, and figures
+  - **Factual Summaries**: 2-3 sentence summaries based on actual web search findings
+  - **Google Search Links**: Direct links to search for each specific topic
+  - **Processing Time**: 20-30 seconds per keyword for thorough web research
 
-#### Caching Strategy
-- **Cache Duration**: 1 hour per keyword
-- **Shared Caching**: Same keyword instances share cached results
+#### Caching Strategy with Management
+- **Cache Duration**: 1 hour per keyword (configurable via `CACHE_DURATION_HOURS`)
+- **Shared Caching**: Same keyword instances share cached results across all sections
 - **Cache Storage**: Redis (production) or node-cache (development)
+- **Cache Management**: 
+  - **Full Cache Clearing**: `DELETE /api/cache` for complete refresh
+  - **Selective Clearing**: `DELETE /api/cache/:keyword` for individual keyword refresh
+  - **Cache Statistics**: Hit/miss ratios and performance metrics via `/api/cache/stats`
+  - **Cache Monitoring**: View cached keywords and expiration times via `/api/cache/info`
 
 ### 3. Refresh Mechanism
 
@@ -69,9 +77,12 @@ A single-page web application that allows users to create a customizable dashboa
 
 #### Backend Stack
 - **Runtime**: Node.js with Express and TypeScript
-- **Caching**: Redis or node-cache
-- **API Integration**: OpenAI SDK
-- **Middleware**: CORS, security headers
+- **AI Integration**: **OpenAI Responses API with web_search_preview tool** for real-time internet search
+- **Caching**: Redis (production) or node-cache (development) with management endpoints
+- **Model Support**: `gpt-4o` and `gpt-4o-mini` (web search capability)
+- **Advanced Parsing**: Multi-pattern JSON extraction with intelligent text parsing fallbacks
+- **Middleware**: CORS, security headers, rate limiting
+- **Cache Management**: Statistics tracking, selective clearing, performance monitoring
 
 ### 5. Frontend Component Architecture
 
@@ -173,10 +184,16 @@ interface CachedResult {
 
 ### 6. API Specifications
 
-#### GET /api/trending?keywords=keyword1,keyword2
-- **Description**: Retrieve trending topics for specified keywords (cache-first)
-- **Parameters**: `keywords` - Comma-separated list of keywords
-- **Response**: 
+#### Core Data Endpoints
+
+##### GET /api/trending?keywords=keyword1,keyword2
+- **Description**: Retrieve trending topics for specified keywords using cache-first strategy with **real web search**
+- **Parameters**: 
+  - `keywords` (required): Comma-separated list of keywords (max 10)
+  - Cache-first strategy: Returns cached data if available, fetches fresh data from web search if expired
+- **Web Search**: Uses OpenAI Responses API with web_search_preview tool for **factual, current information**
+- **Processing Time**: 20-30 seconds per uncached keyword (real web search takes time)
+- **Response Format**: 
   ```json
   {
     "success": true,
@@ -185,9 +202,9 @@ interface CachedResult {
         "keyword": "AI",
         "topics": [
           {
-            "title": "Topic Title",
-            "summary": "2-3 sentence summary...",
-            "searchUrl": "https://www.google.com/search?q=..."
+            "title": "Microsoft Unveils MAI-Voice-1 and MAI-1-Preview AI Models",
+            "summary": "Microsoft announced two new AI models on August 28, 2025, focusing on voice synthesis and advanced language processing capabilities. The models are designed for enterprise applications and represent Microsoft's latest advancement in AI technology.",
+            "searchUrl": "https://www.google.com/search?q=AI%20Microsoft%20MAI-Voice-1"
           }
         ],
         "lastUpdated": "2025-08-30T09:56:48.176Z",
@@ -198,86 +215,209 @@ interface CachedResult {
   }
   ```
 
-#### POST /api/trending/refresh
-- **Description**: Force refresh for keywords (bypasses cache)
-- **Body**: `{ "keywords": ["keyword1", "keyword2"] }`
-- **Rate Limited**: 3 requests per day (configurable)
-- **Response**: Fresh trending data with updated timestamps
+##### POST /api/trending/refresh
+- **Description**: Force refresh for keywords, bypassing cache with **real-time web search**
+- **Rate Limited**: 3 requests per day (configurable via `MANUAL_REFRESH_LIMIT`)
+- **Body**: 
+  ```json
+  {
+    "keywords": ["keyword1", "keyword2"]
+  }
+  ```
+- **Processing**: Each keyword processed individually with OpenAI web search for maximum accuracy
+- **Response**: Fresh trending data with updated timestamps and real web search results
 
-#### GET /api/health
-- **Description**: Server health check
+#### System Health Endpoints
+
+##### GET /api/health
+- **Description**: Comprehensive server health check and system status
 - **Response**: 
   ```json
   {
     "success": true,
     "data": {
       "status": "healthy",
-      "timestamp": "ISO timestamp",
-      "uptime": 1234.567,
-      "version": "1.0.0"
-    }
-  }
-  ```
-
-#### GET /api/cache/stats
-- **Description**: Cache performance metrics
-- **Response**:
-  ```json
-  {
-    "success": true,
-    "data": {
-      "hits": 2,
-      "misses": 1,
-      "errors": 0,
-      "hitRate": "66.67%",
+      "timestamp": "2025-08-30T10:15:32.456Z",
+      "uptime": 3661.245,
+      "version": "1.2.0",
+      "webSearchEnabled": true,
       "cacheType": "NodeCache"
     }
   }
   ```
 
-#### GET /api/cache/info
-- **Description**: View cached keywords and expiration times
+#### Cache Management Endpoints
+
+##### GET /api/cache/stats
+- **Description**: Detailed cache performance metrics and hit/miss ratios
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "hits": 15,
+      "misses": 4,
+      "errors": 0,
+      "hitRate": "78.95%",
+      "cacheType": "NodeCache",
+      "totalRequests": 19
+    }
+  }
+  ```
+
+##### GET /api/cache/info
+- **Description**: View all cached keywords with expiration details and cache keys
 - **Response**:
   ```json
   {
     "success": true,
     "data": {
       "cacheType": "NodeCache",
-      "totalKeys": 2,
+      "totalKeys": 3,
       "keys": [
         {
           "keyword": "AI",
-          "expiresIn": "45 minutes",
-          "key": "trending:ai"
+          "expiresIn": "42 minutes",
+          "key": "trending:ai",
+          "topicsCount": 3
+        },
+        {
+          "keyword": "crypto",
+          "expiresIn": "18 minutes", 
+          "key": "trending:crypto",
+          "topicsCount": 5
         }
       ]
     }
   }
   ```
 
+##### DELETE /api/cache
+- **Description**: **Clear all cached data** across all keywords
+- **Use Case**: Force complete refresh, troubleshooting, or clearing stale data
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "All cache cleared successfully",
+    "data": {
+      "clearedKeys": 3,
+      "cacheType": "NodeCache"
+    }
+  }
+  ```
+
+##### DELETE /api/cache/:keyword
+- **Description**: **Clear cache for specific keyword** to force fresh web search
+- **Parameters**: `keyword` - The keyword to clear from cache
+- **Use Case**: Refresh specific topic that may have stale or incorrect data
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "message": "Cache cleared for keyword: tech",
+    "data": {
+      "keyword": "tech",
+      "wasPresent": true,
+      "cacheKey": "trending:tech"
+    }
+  }
+  ```
+
+#### Error Responses
+
+All endpoints return consistent error format:
+```json
+{
+  "success": false,
+  "error": "Detailed error message",
+  "code": "ERROR_CODE",
+  "timestamp": "2025-08-30T10:15:32.456Z"
+}
+```
+
+**Common Error Codes**:
+- `RATE_LIMIT_EXCEEDED`: Manual refresh limit reached
+- `INVALID_KEYWORDS`: Invalid or missing keywords parameter  
+- `WEB_SEARCH_FAILED`: OpenAI web search API error
+- `CACHE_ERROR`: Cache operation failure
+- `VALIDATION_ERROR`: Request validation failure
+
 ### 7. Configuration Management
+
+#### OpenAI Configuration
+```typescript
+// Environment Variables (.env)
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o                     // Required for web search (not gpt-4-turbo)
+OPENAI_TEMPERATURE=0.3
+OPENAI_MAX_TOKENS=3000
+OPENAI_PRESENCE_PENALTY=0.1
+OPENAI_FREQUENCY_PENALTY=0.1
+
+// Web Search Configuration
+OPENAI_WEB_SEARCH_ENABLED=true          // Enable/disable web search
+OPENAI_WEB_SEARCH_CONTEXT_SIZE=medium   // high, medium, low
+```
 
 #### Application Limits
 ```typescript
 const APP_LIMITS = {
   MAX_KEYWORDS: 10,
-  MANUAL_REFRESH_LIMIT: 3, // per day
-  CACHE_DURATION_HOURS: 1,
+  MANUAL_REFRESH_LIMIT: 3, // per day (configurable)
+  CACHE_DURATION_HOURS: 1, // configurable cache expiration
   MANUAL_REFRESH_ENABLED: false, // development toggle
   MAX_RESULTS_PER_KEYWORD: 10
 }
 ```
 
-### 8. Error Handling
+#### Cache Configuration
+```typescript
+const CACHE_CONFIG = {
+  DEFAULT_TTL: 3600, // 1 hour in seconds
+  CHECK_PERIOD: 600, // Clean expired keys every 10 minutes
+  USE_CLONES: false, // Don't clone cached objects for performance
+  DELETE_ON_EXPIRE: true // Automatically delete expired keys
+}
+```
+
+### 8. Error Handling & Troubleshooting
 
 #### UI Error States
-- **API Failure**: Show fallback message in affected sections
-- **Network Issues**: Display retry option with cached content
-- **Rate Limiting**: Clear messaging about limits and reset times
+- **Web Search Failure**: Intelligent fallbacks with real error context
+- **Parsing Issues**: Multiple JSON extraction patterns with text parsing fallbacks
+- **API Failure**: Show actionable fallback messages with retry options
+- **Network Issues**: Display cached content with retry mechanisms
+- **Rate Limiting**: Clear messaging about daily limits and reset times
+
+#### Advanced Error Recovery
+- **Multi-Pattern JSON Parsing**: 4 different JSON extraction strategies
+- **Intelligent Text Extraction**: Fallback parsing for non-JSON responses  
+- **OpenAI Model Fallback**: Automatically uses `gpt-4o` if configured model doesn't support web search
+- **Cache-First Strategy**: Always serve cached content during API failures
+
+#### Common Issues & Solutions
+
+**"Current [Keyword] Development" appearing instead of real topics:**
+- **Cause**: Web search parsing failed or returned generic fallback
+- **Solution**: Clear cache with `DELETE /api/cache/keyword` and retry
+- **Prevention**: Enhanced parsing with multiple extraction patterns
+
+**Web search taking too long:**
+- **Expected**: 20-30 seconds per keyword for real web search
+- **Optimization**: Cache results for 1 hour to minimize repeated searches
+- **Monitoring**: Check API response times and consider rate limiting
+
+**Cache not updating:**
+- **Manual Refresh**: Use `POST /api/trending/refresh` (rate limited)
+- **Selective Clear**: Use `DELETE /api/cache/keyword` for specific keywords
+- **Full Clear**: Use `DELETE /api/cache` for complete cache reset
 
 #### Logging and Monitoring
-- **Error Tracking**: Log API failures and system errors
-- **Performance Monitoring**: Track API response times and cache hit rates
+- **Comprehensive Logging**: JSON parsing attempts, web search results, cache operations
+- **Error Tracking**: Detailed error context with parsing fallback attempts
+- **Performance Monitoring**: Cache hit/miss rates, API response times, web search success rates
+- **Cache Statistics**: Real-time monitoring via `/api/cache/stats` endpoint
 
 ### 9. User Experience
 

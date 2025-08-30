@@ -43,6 +43,40 @@ export class TrendingController {
     }
   };
 
+  getTrendingCached = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      const keywords = req.query.keywords as string;
+      
+      if (!keywords) {
+        res.status(400).json({
+          success: false,
+          error: 'Keywords parameter is required'
+        });
+        return;
+      }
+
+      const keywordArray = keywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+      
+      if (keywordArray.length === 0) {
+        res.status(400).json({
+          success: false,
+          error: 'At least one valid keyword is required'
+        });
+        return;
+      }
+
+      const result = await this.trendingService.getCachedTopics(keywordArray);
+      
+      res.json({
+        success: true,
+        data: result,
+        message: 'Cached trending topics retrieved successfully'
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   refreshTrending = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
     try {
       const { keywords } = req.body as RefreshRequest;

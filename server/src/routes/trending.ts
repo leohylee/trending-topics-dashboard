@@ -7,6 +7,7 @@ export const createTrendingRoutes = (): Router => {
   const controller = new TrendingController();
 
   router.get('/trending', controller.getTrending);
+  router.get('/trending/cached', controller.getTrendingCached);
   router.post('/trending/refresh', rateLimitRefresh, controller.refreshTrending);
   router.get('/health', controller.getHealth);
   router.get('/cache/stats', controller.getCacheStats);
