@@ -21,7 +21,7 @@ async function startServer() {
 
     app.use('/api', createTrendingRoutes());
     
-    app.get('/', (req, res) => {
+    app.get('/', (_, res) => {
       res.json({
         message: 'Trending Topics Dashboard API',
         version: '1.0.0',
@@ -29,7 +29,7 @@ async function startServer() {
       });
     });
 
-    app.use('*', (req, res) => {
+    app.use('*', (_, res) => {
       res.status(404).json({
         success: false,
         error: 'Route not found',

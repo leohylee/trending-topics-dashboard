@@ -7,7 +7,6 @@ import { useTrending, useRefreshTrending } from '../hooks/useTrending';
 import { Section, TrendingData } from '../types';
 import { storage } from '../utils/storage';
 import 'react-grid-layout/css/styles.css';
-import 'react-grid-layout/css/resizable.css';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 

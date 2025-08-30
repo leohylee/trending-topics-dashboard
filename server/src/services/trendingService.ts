@@ -1,6 +1,6 @@
 import { OpenAIService } from './openaiService';
 import { CacheService } from './cacheService';
-import { TrendingData, TrendingTopic } from '../types';
+import { TrendingData } from '../types';
 import { APP_LIMITS } from '../config';
 
 export class TrendingService {
