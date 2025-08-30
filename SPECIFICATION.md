@@ -104,30 +104,87 @@ interface CachedResult {
 
 ### 6. API Specifications
 
-#### GET /api/trending
-- **Description**: Retrieve trending topics for all active keywords
+#### GET /api/trending?keywords=keyword1,keyword2
+- **Description**: Retrieve trending topics for specified keywords (cache-first)
+- **Parameters**: `keywords` - Comma-separated list of keywords
+- **Response**: 
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "keyword": "AI",
+        "topics": [
+          {
+            "title": "Topic Title",
+            "summary": "2-3 sentence summary...",
+            "searchUrl": "https://www.google.com/search?q=..."
+          }
+        ],
+        "lastUpdated": "2025-08-30T09:56:48.176Z",
+        "cached": true
+      }
+    ],
+    "message": "Trending topics retrieved successfully"
+  }
+  ```
+
+#### POST /api/trending/refresh
+- **Description**: Force refresh for keywords (bypasses cache)
+- **Body**: `{ "keywords": ["keyword1", "keyword2"] }`
+- **Rate Limited**: 3 requests per day (configurable)
+- **Response**: Fresh trending data with updated timestamps
+
+#### GET /api/health
+- **Description**: Server health check
 - **Response**: 
   ```json
   {
     "success": true,
     "data": {
-      "keyword1": {
-        "topics": [...],
-        "lastUpdated": "ISO timestamp",
-        "isFromCache": true
-      }
+      "status": "healthy",
+      "timestamp": "ISO timestamp",
+      "uptime": 1234.567,
+      "version": "1.0.0"
     }
   }
   ```
 
-#### POST /api/trending/refresh
-- **Description**: Trigger manual refresh for all sections
-- **Rate Limited**: 3 requests per day
-- **Response**: Status of refresh operation
+#### GET /api/cache/stats
+- **Description**: Cache performance metrics
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "hits": 2,
+      "misses": 1,
+      "errors": 0,
+      "hitRate": "66.67%",
+      "cacheType": "NodeCache"
+    }
+  }
+  ```
 
-#### GET /api/health
-- **Description**: System health check
-- **Response**: Service status and cache statistics
+#### GET /api/cache/info
+- **Description**: View cached keywords and expiration times
+- **Response**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "cacheType": "NodeCache",
+      "totalKeys": 2,
+      "keys": [
+        {
+          "keyword": "AI",
+          "expiresIn": "45 minutes",
+          "key": "trending:ai"
+        }
+      ]
+    }
+  }
+  ```
 
 ### 7. Configuration Management
 
