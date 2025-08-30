@@ -15,11 +15,14 @@ A customizable dashboard application that displays trending topics for user-defi
 ## Tech Stack
 
 ### Frontend
-- React 18 with TypeScript
-- Tailwind CSS for styling
-- react-grid-layout for drag-and-drop
-- @tanstack/react-query for data fetching
-- Vite for development and building
+- **React 18** with TypeScript for modern component architecture
+- **Tailwind CSS** for utility-first styling with dark mode support
+- **react-grid-layout** for responsive drag-and-drop grid functionality
+- **@tanstack/react-query** for server state management and caching
+- **Vite** for fast development server and optimized builds
+- **Lucide React** for consistent iconography
+- **date-fns** for date formatting and manipulation
+- **Axios** for HTTP client with request/response interceptors
 
 ### Backend
 - Node.js with Express and TypeScript
@@ -72,11 +75,30 @@ NODE_ENV=development
 
 ## Usage
 
+### 📋 Dashboard Management
 1. **Add Sections**: Click "Add Section" to create keyword-based trending topic sections
-2. **Customize**: Configure max results (1-10) per section
-3. **Arrange**: Drag and drop sections to organize your dashboard
-4. **Refresh**: Manual refresh button (rate-limited in production)
-5. **Explore**: Click topics to search on Google
+2. **Customize**: Configure max results (1-10) per section via section settings
+3. **Arrange**: Drag and drop sections to organize your dashboard layout
+4. **Remove**: Delete sections using the settings gear icon
+5. **Theme Toggle**: Switch between light and dark modes using header toggle
+
+### 🔄 Data Operations  
+1. **Auto Refresh**: Sections automatically update every hour via background polling
+2. **Manual Refresh**: Use header refresh button (rate-limited in production)
+3. **Cache Indicators**: Visual indicators show when data is cached vs. fresh
+4. **Error Handling**: Graceful fallbacks and retry options for failed requests
+
+### 🔍 Content Interaction
+1. **Topic Links**: Click any topic title to search Google for that keyword
+2. **Timestamps**: Hover over sections to see "last updated" information  
+3. **Loading States**: Skeleton loading indicators during data fetches
+4. **Responsive**: Full mobile, tablet, and desktop support
+
+### ⚙️ Settings & Configuration
+- **Sections**: Add up to 10 keyword-based sections
+- **Results**: Configure 1-10 trending topics per section
+- **Layout**: Persistent drag-and-drop arrangement
+- **Theme**: Light/dark mode with system preference detection
 
 ## Server Architecture
 
@@ -144,22 +166,74 @@ export const APP_LIMITS = {
 }
 ```
 
+## Client Architecture
+
+### 📁 Frontend Directory Structure
+```
+client/src/
+├── main.tsx              # Application entry point with providers
+├── components/           # React components
+│   ├── Dashboard.tsx     # Main grid layout and state management
+│   ├── TrendingSection.tsx # Individual keyword section display
+│   ├── SettingsModal.tsx   # Section configuration modal
+│   └── ThemeToggle.tsx     # Dark mode toggle component
+├── contexts/             # React contexts
+│   └── ThemeContext.tsx  # Theme state management
+├── hooks/                # Custom React hooks
+│   └── useTrending.ts    # Data fetching and caching logic
+├── services/             # API communication
+│   └── api.ts           # HTTP client configuration
+├── types/                # TypeScript definitions
+│   └── index.ts         # Shared type definitions
+├── utils/                # Utility functions
+│   └── storage.ts       # LocalStorage management
+└── index.css            # Global styles and Tailwind imports
+```
+
+### 🔄 Client Data Flow
+```
+User Interaction → Component State → Custom Hook → API Service → Server
+                                   ↓
+LocalStorage ← State Update ← React Query Cache ← Response
+```
+
+### 📱 Responsive Grid System
+- **Breakpoints**: `lg: 1200px, md: 996px, sm: 768px, xs: 480px`
+- **Grid Columns**: `lg: 4, md: 3, sm: 2, xs: 1`
+- **Auto Layout**: Sections automatically reflow on screen size changes
+- **Persistent Layout**: User arrangements saved to localStorage
+
+### 🎨 Theme System
+- **Mode Toggle**: Light/dark theme switch with system preference detection
+- **Persistence**: Theme choice saved across browser sessions
+- **Context API**: Centralized theme state management
+- **CSS Variables**: Tailwind dark mode classes for seamless transitions
+
+### 📊 State Management
+- **React Query**: Server state, caching, background updates, error handling
+- **Local State**: Component-level state with useState
+- **Context API**: Global theme state
+- **localStorage**: Settings persistence (sections, layout, theme)
+
 ## Development
 
 ### Backend commands:
 ```bash
 cd server
-npm run dev      # Development server
-npm run build    # Build TypeScript
-npm start        # Production server
+npm run dev      # Development server with hot reload
+npm run build    # Build TypeScript to dist/
+npm start        # Production server from dist/
+npm test         # Run Jest test suite
+npm run lint     # ESLint code checking
 ```
 
 ### Frontend commands:
 ```bash
 cd client
-npm run dev      # Development server
-npm run build    # Production build
-npm run preview  # Preview build
+npm run dev      # Vite dev server (http://localhost:3000)
+npm run build    # Production build to dist/
+npm run preview  # Preview production build
+npm run lint     # ESLint + TypeScript checking
 ```
 
 ## Production Deployment

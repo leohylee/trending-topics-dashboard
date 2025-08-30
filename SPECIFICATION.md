@@ -56,13 +56,16 @@ A single-page web application that allows users to create a customizable dashboa
 ### 4. Technical Architecture
 
 #### Frontend Stack
-- **Framework**: React 18 with TypeScript
-- **Styling**: Tailwind CSS
+- **Framework**: React 18 with TypeScript and strict mode
+- **Build Tool**: Vite with Hot Module Replacement (HMR)
+- **Styling**: Tailwind CSS with dark mode support and custom configuration
 - **Key Libraries**:
-  - `react-grid-layout` for drag-and-drop
-  - `@tanstack/react-query` for data management
-  - `axios` for API communication
-  - `date-fns` for timestamp formatting
+  - `react-grid-layout` for responsive drag-and-drop grid system
+  - `@tanstack/react-query` for server state management and caching
+  - `axios` for HTTP client with interceptors and error handling
+  - `date-fns` for date formatting and relative time display
+  - `lucide-react` for consistent SVG icons throughout the app
+- **Development**: ESLint for code quality, TypeScript for type safety
 
 #### Backend Stack
 - **Runtime**: Node.js with Express and TypeScript
@@ -70,7 +73,73 @@ A single-page web application that allows users to create a customizable dashboa
 - **API Integration**: OpenAI SDK
 - **Middleware**: CORS, security headers
 
-### 5. Data Models
+### 5. Frontend Component Architecture
+
+#### Core Components
+
+##### Dashboard.tsx
+- **Purpose**: Main application container with grid layout management
+- **State Management**: 
+  - Section configurations via useState
+  - Grid layout persistence to localStorage
+  - Modal state for settings and editing
+- **Hooks**: useTrending for data fetching, useRefreshTrending for manual refresh
+- **Responsive**: react-grid-layout with breakpoint-specific column configurations
+
+##### TrendingSection.tsx
+- **Purpose**: Individual keyword section display with trending topics
+- **Props**: Section config, trending data, loading/error states, callbacks
+- **Features**: Topic list with Google search links, last updated timestamps
+- **Loading States**: Skeleton placeholders during data fetches
+- **Error Handling**: Fallback UI with retry options
+
+##### SettingsModal.tsx  
+- **Purpose**: Section configuration modal for add/edit operations
+- **Features**: Keyword input validation, max results slider, section management
+- **Validation**: Keyword uniqueness checking, result count limits (1-10)
+- **UX**: Form validation with real-time feedback
+
+##### ThemeToggle.tsx
+- **Purpose**: Light/dark mode switcher with system preference detection  
+- **Persistence**: Theme choice stored in localStorage
+- **Integration**: Works with Tailwind's dark mode classes
+- **Context**: Connected to ThemeContext for global state
+
+#### Custom Hooks
+
+##### useTrending.ts
+- **Purpose**: Data fetching and caching logic using React Query
+- **Features**:
+  - Automatic background refetching every 5 minutes
+  - Cache-first strategy with 5-minute stale time
+  - Error handling with 2 retry attempts
+  - Loading states for initial and background fetches
+- **Query Key**: Based on keyword array for proper cache invalidation
+
+##### useRefreshTrending.ts (via useTrending)
+- **Purpose**: Manual refresh mutation with rate limiting awareness
+- **Features**: Force refresh bypassing cache, error handling
+- **Rate Limiting**: Respects server-side limits with user feedback
+
+#### Utility Services
+
+##### api.ts  
+- **Purpose**: Axios HTTP client configuration
+- **Features**: 
+  - Base URL configuration for development/production
+  - Request/response interceptors for error handling
+  - Timeout configuration (10 seconds)
+  - Type-safe API methods for all endpoints
+
+##### storage.ts
+- **Purpose**: localStorage abstraction for settings persistence  
+- **Features**:
+  - Section CRUD operations with validation
+  - Theme preference storage
+  - Grid layout persistence
+  - Error handling for storage quota issues
+
+### 6. Data Models
 
 #### Section Configuration
 ```typescript
@@ -213,14 +282,59 @@ const APP_LIMITS = {
 ### 9. User Experience
 
 #### Loading States
-- **Initial Load**: Skeleton cards while data loads
-- **Refresh State**: Spinner overlay with cached content visible
-- **Empty State**: Helpful message when no sections configured
+- **Initial Load**: 
+  - Skeleton cards with animated shimmer effects while data loads
+  - Responsive skeleton layout matching final grid structure
+  - Loading indicators in header during background updates
+- **Refresh State**: 
+  - Spinner overlay on refresh button during manual refresh
+  - Background updates show cached content with subtle loading indicator
+  - Toast notifications for successful/failed refresh operations
+- **Empty State**: 
+  - Centered empty state with call-to-action for first section
+  - Settings icon and descriptive text to guide user onboarding
+  - Preview of how sections will look once configured
 
-#### Interactions
-- **Topic Links**: Click topic title to search Google for that keyword
-- **Timestamps**: "Last updated X minutes/hours ago" display
-- **Visual Feedback**: Smooth animations for drag-and-drop
+#### Responsive Design
+- **Mobile (xs < 480px)**:
+  - Single column layout with full-width sections
+  - Simplified header with collapsed navigation  
+  - Touch-optimized drag handles and buttons
+  - Modal dialogs adapted for mobile viewport
+- **Tablet (sm 768px - md 996px)**:
+  - 2-3 column adaptive grid based on screen width
+  - Optimized touch targets for drag-and-drop
+  - Sidebar-style settings modal for landscape orientation
+- **Desktop (lg 1200px+)**:
+  - 4+ column grid with optimal information density
+  - Hover states and tooltips for enhanced UX
+  - Keyboard navigation support for accessibility
+
+#### Interactions & Animations
+- **Drag and Drop**:
+  - Visual feedback with elevation and shadow effects
+  - Smooth transitions during grid reorganization
+  - Drop zone indicators and invalid drop feedback
+  - Snap-to-grid behavior with visual alignment guides
+- **Topic Links**: 
+  - Click any topic title to search Google in new tab
+  - Hover states with subtle color transitions
+  - External link indicators for user awareness
+- **Theme Switching**:
+  - Instant theme transitions with CSS transitions
+  - System preference detection and respect
+  - Persistent theme choice across browser sessions
+- **Form Interactions**:
+  - Real-time validation with inline error messages
+  - Auto-save for grid layout changes
+  - Keyboard shortcuts for power users (ESC to close modals)
+
+#### Accessibility Features
+- **Keyboard Navigation**: Full app navigation via keyboard
+- **Screen Readers**: ARIA labels and semantic HTML structure  
+- **Focus Management**: Proper focus trapping in modals
+- **Color Contrast**: WCAG AA compliant color combinations in both themes
+- **Reduced Motion**: Respects `prefers-reduced-motion` for animations
 
 ### 10. Future Considerations
 
@@ -244,23 +358,53 @@ const APP_LIMITS = {
 
 ## Development Phases
 
-### Phase 1: Core MVP
-1. Basic React dashboard with grid layout
-2. Backend API with ChatGPT integration
-3. Simple caching mechanism
-4. Manual section management
+### Phase 1: Core MVP ✅
+**Frontend**:
+1. React 18 dashboard with TypeScript setup
+2. Basic grid layout with react-grid-layout
+3. Theme system with dark mode support
+4. Settings modal for section management
+5. API integration with React Query for data fetching
 
-### Phase 2: Polish & Performance
-1. Drag-and-drop functionality
-2. Enhanced error handling
-3. Optimized caching strategy
-4. Rate limiting implementation
+**Backend**:
+1. Express API with ChatGPT integration
+2. Simple node-cache caching mechanism  
+3. Basic error handling and CORS setup
 
-### Phase 3: Production Ready
+### Phase 2: Enhanced UX ✅ 
+**Frontend**:
+1. Responsive drag-and-drop with persistent layouts
+2. Enhanced loading states and error handling
+3. Optimized React Query configuration with background updates
+4. Improved accessibility and keyboard navigation
+5. Polish animations and micro-interactions
+
+**Backend**:
+1. Rate limiting implementation
+2. Enhanced caching strategy with Redis support
+3. Comprehensive error handling and validation
+4. Cache statistics and monitoring endpoints
+
+### Phase 3: Production Ready 🚀
+**Frontend**:
+1. Build optimization and code splitting
+2. Service worker for offline capability  
+3. Performance monitoring and error tracking
+4. Comprehensive testing suite (unit, integration, e2e)
+5. SEO optimization and social meta tags
+
+**Backend**:
 1. Production deployment configuration
-2. Monitoring and logging
-3. Performance optimizations
-4. Documentation and testing
+2. Logging and monitoring infrastructure
+3. Security hardening and rate limiting
+4. Load testing and performance optimization
+5. Backup and disaster recovery procedures
+
+**Infrastructure**:
+1. CI/CD pipeline with automated testing
+2. Environment-specific configurations
+3. Docker containerization
+4. Monitoring and alerting setup
 
 ## Success Metrics
 
