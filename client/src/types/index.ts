@@ -1,3 +1,5 @@
+import sharedConfig from '../../../config/shared-config.json';
+
 export interface Section {
   id: string;
   keyword: string;
@@ -29,10 +31,41 @@ export interface DashboardSettings {
   sections: Section[];
 }
 
-export const APP_LIMITS = {
-  MAX_KEYWORDS: 10,
-  MANUAL_REFRESH_LIMIT: 3,
-  CACHE_DURATION_HOURS: 1,
-  MAX_RESULTS_PER_KEYWORD: 10,
-  MIN_RESULTS_PER_KEYWORD: 1
-};
+// API Response Types
+export interface HealthResponse {
+  status: string;
+  timestamp: string;
+  uptime: number;
+  version: string;
+}
+
+export interface CacheStatsResponse {
+  hits: number;
+  misses: number;
+  errors: number;
+  hitRate: string;
+  cacheType: string;
+}
+
+export interface CacheInfoResponse {
+  cacheType: string;
+  totalKeys: number;
+  keys: Array<{
+    keyword: string;
+    expiresIn: string;
+    key: string;
+  }>;
+}
+
+// Request Types
+export interface RefreshRequest {
+  keywords: string[];
+}
+
+// Error Types
+export interface ApiError extends Error {
+  status?: number;
+  code?: string;
+}
+
+export const APP_LIMITS = sharedConfig.APP_LIMITS;

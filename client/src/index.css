@@ -9,6 +9,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 200ms ease, color 200ms ease;
 }
 
 code {
@@ -19,6 +20,10 @@ code {
 .react-grid-item.react-grid-placeholder {
   background: rgb(59 130 246 / 0.2) !important;
   border-radius: 8px;
+}
+
+.dark .react-grid-item.react-grid-placeholder {
+  background: rgb(59 130 246 / 0.3) !important;
 }
 
 .react-grid-item {
