@@ -10,7 +10,17 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   openaiApiKey: process.env.OPENAI_API_KEY || '',
   redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
-  corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173']
+  corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173'],
+  
+  // OpenAI Configuration
+  openai: {
+    // Model selection: 'gpt-4-turbo' for best quality, 'gpt-3.5-turbo' for cost efficiency
+    model: process.env.OPENAI_MODEL || 'gpt-4-turbo',
+    temperature: parseFloat(process.env.OPENAI_TEMPERATURE || '0.3'),
+    maxTokens: parseInt(process.env.OPENAI_MAX_TOKENS || '3000'),
+    presencePenalty: parseFloat(process.env.OPENAI_PRESENCE_PENALTY || '0.1'),
+    frequencyPenalty: parseFloat(process.env.OPENAI_FREQUENCY_PENALTY || '0.1')
+  }
 };
 
 export const validateConfig = () => {
