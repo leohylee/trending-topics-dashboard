@@ -1,14 +1,9 @@
 import dotenv from 'dotenv';
+import sharedConfig from '../../../config/shared-config.json';
 
 dotenv.config();
 
-export const APP_LIMITS = {
-  MAX_KEYWORDS: 10,
-  MANUAL_REFRESH_LIMIT: 3,
-  CACHE_DURATION_HOURS: 1,
-  MANUAL_REFRESH_ENABLED: false,
-  MAX_RESULTS_PER_KEYWORD: 10
-};
+export const APP_LIMITS = sharedConfig.APP_LIMITS;
 
 export const config = {
   port: parseInt(process.env.PORT || '5000'),

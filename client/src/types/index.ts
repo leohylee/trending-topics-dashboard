@@ -1,3 +1,5 @@
+import sharedConfig from '../../../config/shared-config.json';
+
 export interface Section {
   id: string;
   keyword: string;
@@ -29,10 +31,4 @@ export interface DashboardSettings {
   sections: Section[];
 }
 
-export const APP_LIMITS = {
-  MAX_KEYWORDS: 10,
-  MANUAL_REFRESH_LIMIT: 3,
-  CACHE_DURATION_HOURS: 1,
-  MAX_RESULTS_PER_KEYWORD: 10,
-  MIN_RESULTS_PER_KEYWORD: 1
-};
+export const APP_LIMITS = sharedConfig.APP_LIMITS;

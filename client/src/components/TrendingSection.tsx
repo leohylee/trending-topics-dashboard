@@ -30,14 +30,24 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
         <h2 className="font-semibold text-lg text-gray-900">{section.keyword}</h2>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onSettings(section)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSettings(section);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded"
             title="Settings"
           >
             <Settings size={16} />
           </button>
           <button
-            onClick={() => onRemove(section.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(section.id);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded"
             title="Remove section"
           >
@@ -67,7 +77,12 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
               {data.topics.slice(0, section.maxResults).map((topic, index) => (
                 <div key={index} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
                   <button
-                    onClick={() => handleTopicClick(topic.searchUrl)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleTopicClick(topic.searchUrl);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onTouchStart={(e) => e.stopPropagation()}
                     className="text-left w-full group"
                   >
                     <h3 className="font-medium text-gray-900 group-hover:text-blue-600 flex items-start gap-2">

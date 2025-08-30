@@ -17,7 +17,7 @@ export const Dashboard: React.FC = () => {
 
   const keywords = useMemo(() => sections.map(s => s.keyword), [sections]);
   
-  const { data: trendingData, isLoading, error, refetch } = useTrending(keywords);
+  const { data: trendingData, isLoading, error } = useTrending(keywords);
   const refreshMutation = useRefreshTrending();
 
   const handleLayoutChange = (layout: any[]) => {
