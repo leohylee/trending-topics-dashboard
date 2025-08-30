@@ -67,6 +67,9 @@ jspm_packages/
 # Nuxt.js build / generate output
 .nuxt
 
+# Vite
+.vite/
+
 # Storybook build outputs
 .out
 .storybook-out
