@@ -49,18 +49,21 @@ export class OpenAIService {
   private async getWebSearchTrendingTopics(keyword: string, maxResults: number): Promise<KeywordTopics> {
     console.log(`🔍 Using OpenAI Responses API with web search for: ${keyword}`);
     
-    const searchInput = `Search web for ${maxResults} trending "${keyword}" topics (last 48h).
+    const searchInput = `Find ${maxResults} LATEST "${keyword}" news from TODAY/YESTERDAY. Search web for breaking news, live scores, transfers, matches happening now.
 
-OUTPUT: [{"title":"<60 chars","summary":"<80 chars"}]
+RETURN ONLY JSON ARRAY - NO OTHER TEXT:
+[{"title":"headline","summary":"what happened today/yesterday"}]
 
-Rules:
-- ${maxResults} topics only
-- Real current events  
-- Brief titles/summaries
-- Factual data
-- JSON only
+Requirements:
+- TODAY'S events first priority
+- Recent matches/scores/transfers only
+- Include specific dates when available
+- NO explanatory text
+- NO formatting
+- NO markdown
+- ONLY the JSON array
 
-Array:`;
+JSON ARRAY:`;
 
     try {
       // Use the new Responses API with web search tool
