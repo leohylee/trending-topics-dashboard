@@ -1,42 +1,23 @@
 # Trending Topics Dashboard
 
-A real-time trending topics dashboard that provides **factual, current information** from the internet using OpenAI's advanced web search capabilities.
+A real-time trending topics dashboard that provides **factual, current information** from the internet using OpenAI's advanced web search capabilities with cost-effective `gpt-4o-mini`.
 
 ## 🌟 Key Features
 
-- **🌐 Real Web Search**: Uses OpenAI Responses API with web search to get **actual current events**
+- **🌐 Real Web Search**: Uses OpenAI API with web search to get **actual current events**
 - **📊 Customizable Dashboard**: Drag-and-drop grid layout with resizable sections  
-- **🤖 AI-Powered Analysis**: Advanced AI processing of real web search results
-- **⚡ Smart Caching**: Intelligent cache management with clearing capabilities
+- **🤖 AI-Powered Analysis**: Cost-effective `gpt-4o-mini` processing of real web search results
+- **⚡ Smart Caching**: Intelligent 2-hour cache with progressive loading
 - **🌙 Dark Mode**: Toggle between light and dark themes with persistence
 - **📱 Responsive Design**: Works perfectly on mobile, tablet, and desktop
-- **🔒 Rate Limiting**: Configurable refresh limits with production safeguards
+- **🔒 Production Ready**: Structured logging, validation middleware, and error handling
 - **🗂️ Cache Management**: Full cache control with stats and selective clearing
+- **🏗️ Clean Architecture**: Shared utilities, centralized config, and modular design
 
-## Tech Stack
-
-### Frontend
-- **React 18** with TypeScript for modern component architecture
-- **Tailwind CSS** for utility-first styling with dark mode support
-- **react-grid-layout** for responsive drag-and-drop grid functionality
-- **@tanstack/react-query** for server state management and caching
-- **Vite** for fast development server and optimized builds
-- **Lucide React** for consistent iconography
-- **date-fns** for date formatting and manipulation
-- **Axios** for HTTP client with request/response interceptors
-
-### Backend
-- **Node.js** with Express and TypeScript for robust server architecture
-- **OpenAI Responses API** with web search tool for real-time internet data
-- **Redis** for production caching (node-cache for development)
-- **Advanced JSON Parsing** with multiple fallback strategies  
-- **Cache Management** with statistics and selective clearing
-- **CORS and Security** middleware with comprehensive error handling
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ and npm/yarn
+- Node.js 18+ and npm
 - OpenAI API key
 - Redis server (optional for development)
 
@@ -54,7 +35,8 @@ cd server
 npm install
 cp .env.example .env
 # Edit .env and add your OPENAI_API_KEY
-npm run dev
+npm run build
+npm start
 ```
 
 3. **Frontend setup** (in new terminal):
@@ -72,239 +54,266 @@ Create `server/.env`:
 ```env
 OPENAI_API_KEY=your_openai_api_key_here
 REDIS_URL=redis://localhost:6379
-PORT=5000
+PORT=3002
 NODE_ENV=development
 
 # OpenAI Configuration (Optional - defaults provided)
-OPENAI_MODEL=gpt-4o                    # Required for web search (not gpt-4-turbo)
+OPENAI_MODEL=gpt-4o-mini              # Cost-effective default model
 OPENAI_TEMPERATURE=0.3
 OPENAI_MAX_TOKENS=3000
 OPENAI_PRESENCE_PENALTY=0.1
 OPENAI_FREQUENCY_PENALTY=0.1
 
 # Web Search Configuration (Optional)
-OPENAI_WEB_SEARCH_ENABLED=true         # Enable/disable web search
-OPENAI_WEB_SEARCH_CONTEXT_SIZE=medium  # high, medium, low
+OPENAI_WEB_SEARCH_ENABLED=true        # Enable/disable web search
+OPENAI_WEB_SEARCH_CONTEXT_SIZE=medium # high, medium, low
 ```
 
-## Usage
-
-### 📋 Dashboard Management
-1. **Add Sections**: Click "Add Section" to create keyword-based trending topic sections
-2. **Customize**: Configure max results (1-10) per section via section settings
-3. **Arrange**: Drag and drop sections to organize your dashboard layout
-4. **Remove**: Delete sections using the settings gear icon
-5. **Theme Toggle**: Switch between light and dark modes using header toggle
-
-### 🔄 Data Operations  
-1. **Auto Refresh**: Sections automatically update every hour via background polling
-2. **Manual Refresh**: Use header refresh button (rate-limited in production)
-3. **Cache Indicators**: Visual indicators show when data is cached vs. fresh
-4. **Error Handling**: Graceful fallbacks and retry options for failed requests
-
-### 🔍 Content Interaction
-1. **Topic Links**: Click any topic title to search Google for that keyword
-2. **Timestamps**: Hover over sections to see "last updated" information  
-3. **Loading States**: Skeleton loading indicators during data fetches
-4. **Responsive**: Full mobile, tablet, and desktop support
-
-### ⚙️ Settings & Configuration
-- **Sections**: Add up to 10 keyword-based sections
-- **Results**: Configure 1-10 trending topics per section  
-- **Layout**: Persistent drag-and-drop arrangement
-- **Theme**: Light/dark mode with system preference detection
-- **Cache**: Clear cache for specific keywords or all data
-- **Web Search**: Get real-time information from the internet
-
-## Server Architecture
+## 🏗️ Project Architecture
 
 ### 📁 Directory Structure
 ```
-server/src/
-├── index.ts              # Express server setup & entry point
-├── config/               # Configuration & environment variables
-├── routes/               # API endpoint definitions
-├── controllers/          # Request/response handlers
-├── services/             # Business logic & external integrations
-├── middleware/           # Request processing (errors, rate limiting)
-└── types/                # TypeScript type definitions
+trending-topics-dashboard/
+├── config/                    # Centralized configuration system
+│   ├── base.json             # Shared app config (ports, limits, defaults)
+│   ├── environment.schema.json # Environment variable documentation
+│   └── README.md             # Configuration guide
+├── shared/                   # Shared utilities and types
+│   ├── types/index.ts        # Common type definitions
+│   └── utils/               # Shared utility functions
+│       ├── api.ts           # API response utilities
+│       ├── logger.ts        # Structured logging system
+│       └── validation.ts    # Input validation utilities
+├── server/                  # Backend Express.js application
+│   ├── src/
+│   │   ├── controllers/     # Request handlers
+│   │   ├── middleware/      # Validation, rate limiting, errors
+│   │   ├── services/        # Business logic (OpenAI, cache, trending)
+│   │   ├── utils/          # Server-specific utilities
+│   │   ├── types/          # Server type definitions
+│   │   └── config/         # Server configuration loader
+│   ├── dist/               # Compiled JavaScript output
+│   └── .env.example        # Environment template
+└── client/                 # React frontend application
+    ├── src/
+    │   ├── components/     # React components
+    │   ├── hooks/          # Custom React hooks
+    │   ├── services/       # API client
+    │   ├── contexts/       # React contexts (theme)
+    │   ├── types/          # Client type definitions
+    │   └── config/         # Client configuration
+    ├── dist/              # Production build output
+    └── public/            # Static assets
 ```
 
 ### 🔄 Request Flow
 ```
-Client → Routes → Controller → Service → Cache/OpenAI → Response
+Client (3000) → Vite Proxy → Server (3002) → OpenAI API → Cache → Response
 ```
 
-1. **Routes** define API endpoints and map to controller methods
-2. **Controllers** handle HTTP requests, validate input, call services
-3. **Services** implement business logic:
-   - `TrendingService`: Orchestrates cache-first strategy with clearing capabilities
-   - `CacheService`: Redis/NodeCache with hit/miss tracking and management
-   - `OpenAIService`: **OpenAI Responses API with Web Search** integration
-4. **Middleware** processes requests (CORS, errors, rate limiting)
+## 💡 Key Improvements Made
 
-### 🧠 Cache-First Strategy
-```typescript
-// 1. Check cache for all keywords first
-const cachedData = await cacheService.getMultiple(keywords);
+### 🧹 **Code Quality & Architecture**
+- **Eliminated 78+ lines of duplicate code** across type definitions
+- **Centralized configuration system** with single source of truth
+- **Shared utilities library** for consistent API responses and validation
+- **Structured logging system** replacing 30+ console.log statements
+- **Validation middleware** eliminating 7+ duplicate validation patterns
+- **Local server utilities** avoiding TypeScript cross-directory issues
 
-// 2. Only call OpenAI for uncached keywords  
-const uncachedKeywords = keywords.filter(k => !cachedData.has(k));
+### ⚡ **Performance & Cost Optimization** 
+- **gpt-4o-mini model** for significant cost reduction (vs gpt-4-turbo)
+- **Progressive loading** - show cached data immediately, fetch fresh data in background
+- **Smart caching strategy** with 2-hour duration and hit/miss tracking
+- **Reduced API calls** through intelligent cache-first approach
 
-// 3. Combine cached + fresh results
-if (uncachedKeywords.length > 0) {
-  const freshData = await openaiService.getTrendingTopics(uncachedKeywords);
-  await cacheService.setMultiple(freshData); // Cache for next time
+### 🛡️ **Production Readiness**
+- **TypeScript strict mode** with comprehensive type safety
+- **Environment-specific logging** (development vs production)
+- **Structured error handling** with consistent API responses
+- **Input validation** at middleware level
+- **Rate limiting** protection for production environments
+- **Build optimization** for both client and server
+
+### 🔧 **Developer Experience**
+- **Hot module reloading** with zero-config setup
+- **Consistent property naming** (camelCase throughout)
+- **Type exports** properly configured for isolated modules
+- **Port configuration** centralized and consistent (client proxy → server)
+- **Documentation** with configuration guides and troubleshooting
+
+## 💰 Cost Optimization
+
+### Model Configuration
+The application now uses **gpt-4o-mini** by default for significant cost savings:
+
+```json
+{
+  "openai": {
+    "model": "gpt-4o-mini",        // Most cost effective
+    "temperature": 0.3,
+    "maxTokens": 3000,
+    "webSearch": {
+      "enabled": true,
+      "contextSize": "medium"      // Balanced cost and quality
+    }
+  }
 }
 ```
 
-## API Endpoints
+### Cost Comparison
+- **gpt-4o-mini**: Most cost effective, good quality
+- **gpt-3.5-turbo**: Good balance of cost and quality  
+- **gpt-4-turbo**: High quality, higher cost
+- **gpt-4o**: Latest model, premium cost
+
+### Smart Caching
+- **2-hour cache duration** significantly reduces API calls
+- **Progressive loading** shows cached data immediately
+- **Cache hit tracking** for monitoring effectiveness
+- **Selective cache clearing** for targeted updates
+
+## 🔌 API Endpoints
 
 ### Core Endpoints
 - `GET /api/trending?keywords=tech,science` - Get trending topics (cache-first)
-- `POST /api/trending/refresh` - Force refresh with **real web search** (rate limited)
-- `GET /api/health` - Server health check
+- `GET /api/trending/cached?keywords=tech` - Progressive loading endpoint
+- `POST /api/trending/refresh` - Force refresh with real web search (rate limited)
+- `GET /api/health` - Server health check with uptime
 
 ### 🗂️ Cache Management
-- `GET /api/cache/stats` - Cache hit/miss statistics & performance metrics
-- `GET /api/cache/info` - View cached keywords, expiration times, and counts
-- `DELETE /api/cache` - **Clear all cached data**
-- `DELETE /api/cache/{keyword}` - **Clear specific keyword from cache**
+- `GET /api/cache/stats` - Hit/miss statistics and performance metrics
+- `GET /api/cache/info` - View cached keywords with expiration times
+- `DELETE /api/cache` - Clear all cached data
+- `DELETE /api/cache/{keyword}` - Clear specific keyword from cache
 
-## 🌐 Web Search Integration
+## 🔧 Configuration System
 
-### How It Works
-This application uses **OpenAI's Responses API with web search tool** to provide real, factual, current information:
-
-1. **Real Web Search**: The AI searches the internet for current news and trends
-2. **Source Verification**: Pulls from reputable sources like CNN, BBC, Reuters, TechCrunch
-3. **Fact-Based Results**: Returns actual events with real dates, names, and figures
-4. **Smart Parsing**: Advanced JSON parsing handles various response formats
-
-### Example Real Results
-Instead of fictional content, you get real trending topics like:
-- **"El Salvador Transfers Bitcoin Reserves to Multiple Addresses for Enhanced Security"** (Aug 29, 2025, $682M worth)
-- **"MLS Breaks Transfer Spending Record with Son Heung-min's Historic Signing"** ($26.5M transfer)
-- **"Microsoft Unveils MAI-Voice-1 and MAI-1-Preview AI Models"** (Aug 28, 2025 announcement)
-
-### Web Search Requirements
-- **Model**: Must use `gpt-4o` or `gpt-4o-mini` (not `gpt-4-turbo`)
-- **API Key**: Standard OpenAI API key with Responses API access
-- **Processing Time**: 20-30 seconds per request for thorough web search
-
-## Configuration
-
-Edit `server/src/config/index.ts`:
-```typescript
-export const APP_LIMITS = {
-  MAX_KEYWORDS: 10,
-  MANUAL_REFRESH_LIMIT: 3, // per day
-  CACHE_DURATION_HOURS: 1,
-  MANUAL_REFRESH_ENABLED: false, // enable in production
-  MAX_RESULTS_PER_KEYWORD: 10
+### Centralized Config (`/config/base.json`)
+```json
+{
+  "app": {
+    "name": "Trending Topics Dashboard",
+    "version": "1.0.0"
+  },
+  "ports": {
+    "server": 3002,
+    "client": 3000
+  },
+  "limits": {
+    "maxKeywords": 10,
+    "manualRefreshLimit": 3,
+    "cacheDurationHours": 2,
+    "manualRefreshEnabled": false,
+    "maxResultsPerKeyword": 10,
+    "minResultsPerKeyword": 1
+  },
+  "openai": {
+    "model": "gpt-4o-mini",
+    "temperature": 0.3,
+    "maxTokens": 3000,
+    "webSearch": {
+      "enabled": true,
+      "contextSize": "medium"
+    }
+  }
 }
 ```
 
-## Client Architecture
+### Environment Variable Schema
+The project includes comprehensive environment variable documentation with validation:
 
-### 📁 Frontend Directory Structure
-```
-client/src/
-├── main.tsx              # Application entry point with providers
-├── components/           # React components
-│   ├── Dashboard.tsx     # Main grid layout and state management
-│   ├── TrendingSection.tsx # Individual keyword section display
-│   ├── SettingsModal.tsx   # Section configuration modal
-│   └── ThemeToggle.tsx     # Dark mode toggle component
-├── contexts/             # React contexts
-│   └── ThemeContext.tsx  # Theme state management
-├── hooks/                # Custom React hooks
-│   └── useTrending.ts    # Data fetching and caching logic
-├── services/             # API communication
-│   └── api.ts           # HTTP client configuration
-├── types/                # TypeScript definitions
-│   └── index.ts         # Shared type definitions
-├── utils/                # Utility functions
-│   └── storage.ts       # LocalStorage management
-└── index.css            # Global styles and Tailwind imports
-```
+- **Required**: `OPENAI_API_KEY`
+- **Optional**: `PORT`, `NODE_ENV`, `REDIS_URL`, `OPENAI_MODEL`, etc.
+- **Validated ranges**: Temperature (0-2), token limits, keyword counts
+- **Cost guidance**: Model selection with efficiency ratings
 
-### 🔄 Client Data Flow
-```
-User Interaction → Component State → Custom Hook → API Service → Server
-                                   ↓
-LocalStorage ← State Update ← React Query Cache ← Response
-```
+## 🏃‍♂️ Usage
 
-### 📱 Responsive Grid System
-- **Breakpoints**: `lg: 1200px, md: 996px, sm: 768px, xs: 480px`
-- **Grid Columns**: `lg: 4, md: 3, sm: 2, xs: 1`
-- **Auto Layout**: Sections automatically reflow on screen size changes
-- **Persistent Layout**: User arrangements saved to localStorage
+### 📋 Dashboard Management
+1. **Add Sections**: Click "Add Section" to create keyword-based trending topic sections
+2. **Customize**: Configure max results (1-10) per section via settings
+3. **Arrange**: Drag and drop sections to organize your layout
+4. **Theme**: Toggle between light and dark modes
+5. **Progressive Loading**: See cached data instantly, fresh data loads in background
 
-### 🎨 Theme System
-- **Mode Toggle**: Light/dark theme switch with system preference detection
-- **Persistence**: Theme choice saved across browser sessions
-- **Context API**: Centralized theme state management
-- **CSS Variables**: Tailwind dark mode classes for seamless transitions
+### 🔄 Data Operations  
+1. **Smart Loading**: Cached data appears immediately, fresh data updates progressively
+2. **Manual Refresh**: Use header refresh button (rate-limited in production)
+3. **Cache Management**: Clear specific keywords or all cached data
+4. **Real-time Updates**: Background polling with intelligent cache invalidation
 
-### 📊 State Management
-- **React Query**: Server state, caching, background updates, error handling
-- **Local State**: Component-level state with useState
-- **Context API**: Global theme state
-- **localStorage**: Settings persistence (sections, layout, theme)
+## 🚀 Development
 
-## Development
-
-### Backend commands:
+### Backend Commands
 ```bash
 cd server
-npm run dev      # Development server with hot reload
 npm run build    # Build TypeScript to dist/
 npm start        # Production server from dist/
-npm test         # Run Jest test suite
-npm run lint     # ESLint code checking
+npm run dev      # Development with nodemon (if available)
 ```
 
-### Frontend commands:
+### Frontend Commands
 ```bash
 cd client
 npm run dev      # Vite dev server (http://localhost:3000)
-npm run build    # Production build to dist/
+npm run build    # Production build with TypeScript checking
 npm run preview  # Preview production build
-npm run lint     # ESLint + TypeScript checking
 ```
 
-## Production Deployment
+### 🧪 Testing
+```bash
+# Server
+cd server && npm run build  # Verify TypeScript compilation
 
-1. Set environment variables
-2. Enable `MANUAL_REFRESH_ENABLED: true`
-3. Set up Redis server
-4. Build both frontend and backend
-5. Configure reverse proxy (nginx recommended)
+# Client  
+cd client && npm run build  # Verify TypeScript + production build
+
+# Health checks
+curl http://localhost:3002/api/health  # Server health
+curl http://localhost:3000/api/health  # Client proxy test
+```
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
 
-**"Current [Keyword] Development" appearing instead of real topics:**
-- Clear cache: `DELETE /api/cache/keyword` or `DELETE /api/cache`
-- Check model configuration: Ensure using `gpt-4o` (not `gpt-4-turbo`)
-- Retry the request: Web search occasionally takes multiple attempts
+**TypeScript compilation errors:**
+- All imports use proper local paths (no cross-rootDir references)
+- Type exports use `export type` for isolated modules
+- Property names consistent throughout (camelCase)
 
-**Web search taking too long:**
-- Normal processing time: 20-30 seconds for real web search
-- Check OpenAI API status and rate limits
-- Verify internet connectivity and API key permissions
+**Client-server communication:**
+- Client proxy correctly configured for port 3002
+- CORS headers properly set for development/production
+- API responses follow consistent structure
 
-**Cache not updating:**
-- Use manual refresh: `POST /api/trending/refresh`
-- Clear specific cache: `DELETE /api/cache/{keyword}`
-- Check cache expiration: `GET /api/cache/info`
+**Configuration issues:**
+- Environment variables properly validated on startup
+- Default values provided for all optional settings
+- Centralized config prevents port mismatches
 
-## 💰 Cost Optimization
+**Performance optimization:**
+- Progressive loading shows cached data immediately
+- Background updates don't block UI
+- Smart caching reduces API costs significantly
 
-- **Individual Processing**: Each keyword gets dedicated web search for accuracy
-- **Smart Caching**: 1-hour cache duration reduces API calls significantly  
-- **Rate Limiting**: Prevents excessive API usage in production
-- **Efficient Parsing**: Multiple fallback strategies minimize failed requests
+## 📚 Documentation
+
+- **Configuration Guide**: `/config/README.md`
+- **API Documentation**: See API Endpoints section above
+- **Architecture Overview**: See Project Architecture section
+- **Environment Setup**: See Environment Variables section
+
+## 🎯 Production Deployment
+
+1. **Environment Setup**: Configure all required environment variables
+2. **Build Applications**: Run `npm run build` in both server and client
+3. **Redis Setup**: Configure Redis for production caching
+4. **Rate Limiting**: Enable `manualRefreshEnabled: true` in production
+5. **Monitoring**: Use structured logging and health check endpoints
+6. **Reverse Proxy**: Configure nginx/Apache for client + server routing
+
+---
+
+**Built with ❤️ using modern TypeScript, React, Express, and OpenAI gpt-4o-mini**

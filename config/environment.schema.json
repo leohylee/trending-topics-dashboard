@@ -1,0 +1,73 @@
+{
+  "required": [
+    "OPENAI_API_KEY"
+  ],
+  "optional": {
+    "PORT": {
+      "type": "number",
+      "description": "Server port (default: 3002)"
+    },
+    "NODE_ENV": {
+      "type": "string",
+      "description": "Environment mode",
+      "options": ["development", "production", "test"]
+    },
+    "REDIS_URL": {
+      "type": "string",
+      "description": "Redis connection URL (default: redis://localhost:6379)"
+    },
+    "CORS_ORIGINS": {
+      "type": "string",
+      "description": "Comma-separated list of allowed CORS origins"
+    },
+    "OPENAI_MODEL": {
+      "type": "string",
+      "description": "OpenAI model to use (default: gpt-4o-mini for cost efficiency)",
+      "options": ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+      "cost_efficiency": {
+        "gpt-4o-mini": "Most cost effective",
+        "gpt-3.5-turbo": "Good balance of cost and quality",
+        "gpt-4-turbo": "High quality, higher cost",
+        "gpt-4o": "Latest model, premium cost"
+      }
+    },
+    "OPENAI_TEMPERATURE": {
+      "type": "number",
+      "description": "Model creativity level (0-2, default: 0.3)",
+      "range": "0.0-2.0"
+    },
+    "OPENAI_MAX_TOKENS": {
+      "type": "number", 
+      "description": "Maximum tokens per request (default: 3000)"
+    },
+    "OPENAI_PRESENCE_PENALTY": {
+      "type": "number",
+      "description": "Penalty for repetition (default: 0.1)",
+      "range": "-2.0-2.0"
+    },
+    "OPENAI_FREQUENCY_PENALTY": {
+      "type": "number",
+      "description": "Penalty for frequency (default: 0.1)",
+      "range": "-2.0-2.0"
+    },
+    "OPENAI_WEB_SEARCH_ENABLED": {
+      "type": "boolean",
+      "description": "Enable web search functionality (default: true)"
+    },
+    "OPENAI_WEB_SEARCH_CONTEXT_SIZE": {
+      "type": "string",
+      "description": "Web search context size (default: medium)",
+      "options": ["high", "medium", "low"],
+      "cost_impact": {
+        "high": "Best quality, slower, more expensive",
+        "medium": "Balanced quality and cost", 
+        "low": "Faster, cheaper, lower quality"
+      }
+    },
+    "LOG_LEVEL": {
+      "type": "string",
+      "description": "Logging verbosity level",
+      "options": ["ERROR", "WARN", "INFO", "DEBUG", "TRACE"]
+    }
+  }
+}

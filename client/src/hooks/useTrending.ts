@@ -30,7 +30,9 @@ export const useTrending = (keywords: string[]) => {
   useEffect(() => {
     if (cachedQuery.data) {
       const cached = cachedQuery.data;
-      console.log(`📊 Progressive Loading: ${cached.cacheHits}/${cached.totalRequested} cached, ${cached.uncachedKeywords.length} need fetching`);
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.log(`📊 Progressive Loading: ${cached.cacheHits}/${cached.totalRequested} cached, ${cached.uncachedKeywords.length} need fetching`);
+      }
       
       // Immediately set cached data
       setProgressiveData(cached.cachedData);
@@ -54,7 +56,9 @@ export const useTrending = (keywords: string[]) => {
       setProgressiveData(sortedData);
       setIsProgressiveLoading(false);
       
-      console.log(`✅ Progressive Loading Complete: ${sortedData.length} total sections loaded`);
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.log(`✅ Progressive Loading Complete: ${sortedData.length} total sections loaded`);
+      }
       
       // Update the main query cache with complete data
       queryClient.setQueryData(['trending', keywords], sortedData);
@@ -130,7 +134,9 @@ export const useRefreshSingleSection = () => {
         queryKey: ['trending'],
       });
 
-      console.log(`✅ Refreshed single section: ${keyword}`);
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        console.log(`✅ Refreshed single section: ${keyword}`);
+      }
     },
   });
 };

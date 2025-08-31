@@ -17,8 +17,8 @@ export class TrendingService {
       return [];
     }
 
-    if (keywords.length > APP_LIMITS.MAX_KEYWORDS) {
-      throw new Error(`Maximum ${APP_LIMITS.MAX_KEYWORDS} keywords allowed`);
+    if (keywords.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} keywords allowed`);
     }
 
     const cachedData = await this.cacheService.getMultiple(keywords);
@@ -67,8 +67,8 @@ export class TrendingService {
       };
     }
 
-    if (keywords.length > APP_LIMITS.MAX_KEYWORDS) {
-      throw new Error(`Maximum ${APP_LIMITS.MAX_KEYWORDS} keywords allowed`);
+    if (keywords.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} keywords allowed`);
     }
 
     const cachedData = await this.cacheService.getMultiple(keywords);
@@ -108,8 +108,8 @@ export class TrendingService {
       return [];
     }
 
-    if (keywords.length > APP_LIMITS.MAX_KEYWORDS) {
-      throw new Error(`Maximum ${APP_LIMITS.MAX_KEYWORDS} keywords allowed`);
+    if (keywords.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} keywords allowed`);
     }
 
     try {
@@ -131,12 +131,12 @@ export class TrendingService {
   private async fetchFreshData(keywords: string[]): Promise<TrendingData[]> {
     const keywordTopics = await this.openaiService.getTrendingTopics(
       keywords,
-      APP_LIMITS.MAX_RESULTS_PER_KEYWORD
+      APP_LIMITS.maxResultsPerKeyword
     );
 
     return keywordTopics.map(item => ({
       keyword: item.keyword,
-      topics: item.topics.slice(0, APP_LIMITS.MAX_RESULTS_PER_KEYWORD),
+      topics: item.topics.slice(0, APP_LIMITS.maxResultsPerKeyword),
       lastUpdated: new Date(),
       cached: false
     }));
@@ -145,7 +145,7 @@ export class TrendingService {
   private isCacheValid(data: TrendingData): boolean {
     const now = new Date();
     const cacheAge = now.getTime() - new Date(data.lastUpdated).getTime();
-    const maxAge = APP_LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000; // Convert to milliseconds
+    const maxAge = APP_LIMITS.cacheDurationHours * 60 * 60 * 1000; // Convert to milliseconds
     
     return cacheAge < maxAge;
   }

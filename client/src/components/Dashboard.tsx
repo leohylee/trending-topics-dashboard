@@ -85,8 +85,8 @@ export const Dashboard: React.FC = () => {
       i: section.id,
       x: section.position.x,
       y: section.position.y,
-      w: section.position.w,
-      h: section.position.h,
+      w: section.position.w || 2,
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     })),
@@ -94,8 +94,8 @@ export const Dashboard: React.FC = () => {
       i: section.id,
       x: section.position.x % 3,
       y: section.position.y,
-      w: Math.min(section.position.w, 2),
-      h: section.position.h,
+      w: Math.min(section.position.w || 2, 2),
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     })),
@@ -103,8 +103,8 @@ export const Dashboard: React.FC = () => {
       i: section.id,
       x: section.position.x % 2,
       y: section.position.y,
-      w: Math.min(section.position.w, 1),
-      h: section.position.h,
+      w: Math.min(section.position.w || 1, 1),
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     })),
@@ -113,7 +113,7 @@ export const Dashboard: React.FC = () => {
       x: 0,
       y: index * 2,
       w: 1,
-      h: section.position.h,
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     }))

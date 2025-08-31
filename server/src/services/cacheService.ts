@@ -15,7 +15,7 @@ export class CacheService {
 
   constructor() {
     this.nodeCache = new NodeCache({ 
-      stdTTL: APP_LIMITS.CACHE_DURATION_HOURS * 3600,
+      stdTTL: APP_LIMITS.cacheDurationHours * 3600,
       checkperiod: 600 // Check for expired keys every 10 minutes
     });
     
@@ -77,7 +77,7 @@ export class CacheService {
       if (this.useRedis && this.redisClient) {
         await this.redisClient.setEx(
           key,
-          APP_LIMITS.CACHE_DURATION_HOURS * 3600,
+          APP_LIMITS.cacheDurationHours * 3600,
           JSON.stringify(cacheData)
         );
       } else {
