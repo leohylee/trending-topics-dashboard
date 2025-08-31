@@ -4,7 +4,7 @@ import { RefreshCw, Settings, Plus } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
 import { SettingsModal } from './SettingsModal';
 import { ThemeToggle } from './ThemeToggle';
-import { useTrending, useRefreshTrending } from '../hooks/useTrending';
+import { useTrending, useRefreshTrending, useRefreshSingleSection } from '../hooks/useTrending';
 import { Section, TrendingData } from '../types';
 import { storage } from '../utils/storage';
 import 'react-grid-layout/css/styles.css';
@@ -18,8 +18,9 @@ export const Dashboard: React.FC = () => {
 
   const keywords = useMemo(() => sections.map(s => s.keyword), [sections]);
   
-  const { data: trendingData, isLoading, error } = useTrending(keywords);
+  const { data: trendingData, isLoading, isProgressiveLoading, error } = useTrending(keywords);
   const refreshMutation = useRefreshTrending();
+  const refreshSingleMutation = useRefreshSingleSection();
 
   const handleLayoutChange = (layout: any[]) => {
     const updatedSections = sections.map(section => {
@@ -71,6 +72,10 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const handleSingleRefresh = (keyword: string) => {
+    refreshSingleMutation.mutate(keyword);
+  };
+
   const getTrendingDataForKeyword = (keyword: string): TrendingData | undefined => {
     return trendingData?.find(data => data.keyword === keyword);
   };
@@ -80,8 +85,8 @@ export const Dashboard: React.FC = () => {
       i: section.id,
       x: section.position.x,
       y: section.position.y,
-      w: section.position.w,
-      h: section.position.h,
+      w: section.position.w || 2,
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     })),
@@ -89,8 +94,8 @@ export const Dashboard: React.FC = () => {
       i: section.id,
       x: section.position.x % 3,
       y: section.position.y,
-      w: Math.min(section.position.w, 2),
-      h: section.position.h,
+      w: Math.min(section.position.w || 2, 2),
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     })),
@@ -98,8 +103,8 @@ export const Dashboard: React.FC = () => {
       i: section.id,
       x: section.position.x % 2,
       y: section.position.y,
-      w: Math.min(section.position.w, 1),
-      h: section.position.h,
+      w: Math.min(section.position.w || 1, 1),
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     })),
@@ -108,7 +113,7 @@ export const Dashboard: React.FC = () => {
       x: 0,
       y: index * 2,
       w: 1,
-      h: section.position.h,
+      h: section.position.h || 2,
       minW: 1,
       minH: 2
     }))
@@ -123,14 +128,19 @@ export const Dashboard: React.FC = () => {
               Trending Topics
             </h1>
             <div className="flex items-center gap-3">
+              {isProgressiveLoading && (
+                <div className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
+                  Loading fresh data...
+                </div>
+              )}
               <ThemeToggle />
               <button
                 onClick={handleRefresh}
                 disabled={refreshMutation.isPending || isLoading}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
               >
-                <RefreshCw size={16} className={refreshMutation.isPending ? 'animate-spin' : ''} />
-                Refresh
+                <RefreshCw size={16} className={(refreshMutation.isPending || isProgressiveLoading) ? 'animate-spin' : ''} />
+                {isProgressiveLoading ? 'Loading...' : 'Refresh'}
               </button>
               <button
                 onClick={() => setShowSettings(true)}
@@ -175,10 +185,13 @@ export const Dashboard: React.FC = () => {
                 <TrendingSection
                   section={section}
                   data={getTrendingDataForKeyword(section.keyword)}
-                  isLoading={isLoading}
+                  isLoading={isLoading && !trendingData.length} // Only show loading if no data at all
+                  isProgressiveLoading={isProgressiveLoading && !getTrendingDataForKeyword(section.keyword)}
                   error={error}
                   onRemove={handleRemoveSection}
                   onSettings={handleSectionSettings}
+                  onRefresh={handleSingleRefresh}
+                  isRefreshing={refreshSingleMutation.isPending && refreshSingleMutation.variables === section.keyword}
                 />
               </div>
             ))}

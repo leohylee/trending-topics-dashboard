@@ -1,23 +1,30 @@
 import axios, { AxiosError } from 'axios';
-import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest } from '../types';
+import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest, CachedTrendingResponse } from '../types';
+import { transformDatesInResponse, handleApiError } from '../../../shared/utils/api';
+import { API_CONFIG } from '../config';
 
-// Create axios instance with configuration
+// Create axios instance with configuration from centralized config
 const api = axios.create({
-  baseURL: '/api',
-  timeout: 30000,
+  baseURL: API_CONFIG.baseUrl,
+  timeout: API_CONFIG.timeout,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor for logging
+// Request interceptor for logging (development only)
 api.interceptors.request.use(
   (config) => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    // Only log in development
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    }
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.error('API Request Error:', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -28,43 +35,17 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    const message = getErrorMessage(error);
-    console.error('API Response Error:', message);
-    return Promise.reject(new Error(message));
+    const apiError = handleApiError(error);
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      console.error('API Response Error:', apiError.message);
+    }
+    return Promise.reject(apiError);
   }
 );
 
-// Error handling utility
-function getErrorMessage(error: AxiosError): string {
-  if (!error.response) {
-    return 'Network error - please check your connection';
-  }
-
-  const status = error.response.status;
-  const data = error.response.data as ApiResponse;
-
-  if (data?.error) {
-    return data.error;
-  }
-
-  switch (status) {
-    case 400:
-      return 'Invalid request';
-    case 401:
-      return 'Unauthorized access';
-    case 403:
-      return 'Access forbidden';
-    case 404:
-      return 'Resource not found';
-    case 429:
-      return 'Too many requests - please try again later';
-    case 500:
-      return 'Internal server error';
-    case 503:
-      return 'Service temporarily unavailable';
-    default:
-      return `Request failed with status ${status}`;
-  }
+// Helper function to process API response data
+function processResponseData<T>(data: T): T {
+  return transformDatesInResponse(data) as T;
 }
 
 export const trendingApi = {
@@ -76,10 +57,18 @@ export const trendingApi = {
       throw new Error(response.data.error || 'Failed to fetch trending topics');
     }
     
-    return response.data.data!.map(item => ({
-      ...item,
-      lastUpdated: new Date(item.lastUpdated)
-    }));
+    return processResponseData(response.data.data!);
+  },
+
+  async getCachedTrending(keywords: string[]): Promise<CachedTrendingResponse> {
+    const keywordsParam = keywords.join(',');
+    const response = await api.get<ApiResponse<CachedTrendingResponse>>(`/trending/cached?keywords=${encodeURIComponent(keywordsParam)}`);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to fetch cached trending topics');
+    }
+    
+    return processResponseData(response.data.data!);
   },
 
   async refreshTrending(keywords: string[]): Promise<TrendingData[]> {
@@ -90,10 +79,19 @@ export const trendingApi = {
       throw new Error(response.data.error || 'Failed to refresh trending topics');
     }
     
-    return response.data.data!.map(item => ({
-      ...item,
-      lastUpdated: new Date(item.lastUpdated)
-    }));
+    return processResponseData(response.data.data!);
+  },
+
+  async refreshSingleKeyword(keyword: string): Promise<TrendingData> {
+    const payload: RefreshRequest = { keywords: [keyword] };
+    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh', payload);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to refresh trending topic');
+    }
+    
+    const result = response.data.data![0];
+    return processResponseData(result);
   },
 
   async getHealth(): Promise<HealthResponse> {
@@ -127,8 +125,8 @@ export const trendingApi = {
   }
 };
 
-// Export error handling utility for use in components
-export { getErrorMessage };
+// Export shared utilities for use in components
+export { handleApiError } from '../../../shared/utils/api';
 
 // Export axios instance for advanced usage
 export { api };

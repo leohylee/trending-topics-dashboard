@@ -51,7 +51,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onClose();
   };
 
-  const canAddMore = sections.length < APP_LIMITS.MAX_KEYWORDS;
+  const canAddMore = sections.length < APP_LIMITS.maxKeywords;
   const isEditing = !!editingSection;
 
   if (!isOpen) return null;
@@ -94,22 +94,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <input
               type="range"
               id="maxResults"
-              min={APP_LIMITS.MIN_RESULTS_PER_KEYWORD}
-              max={APP_LIMITS.MAX_RESULTS_PER_KEYWORD}
+              min={APP_LIMITS.minResultsPerKeyword}
+              max={APP_LIMITS.maxResultsPerKeyword}
               value={maxResults}
               onChange={(e) => setMaxResults(Number(e.target.value))}
               className="w-full"
             />
             <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-              <span>{APP_LIMITS.MIN_RESULTS_PER_KEYWORD}</span>
-              <span>{APP_LIMITS.MAX_RESULTS_PER_KEYWORD}</span>
+              <span>{APP_LIMITS.minResultsPerKeyword}</span>
+              <span>{APP_LIMITS.maxResultsPerKeyword}</span>
             </div>
           </div>
           
           {!isEditing && (
             <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Sections: {sections.length}/{APP_LIMITS.MAX_KEYWORDS}
+                Sections: {sections.length}/{APP_LIMITS.maxKeywords}
               </p>
               {!canAddMore && (
                 <p className="text-sm text-red-600 dark:text-red-400 mt-1">

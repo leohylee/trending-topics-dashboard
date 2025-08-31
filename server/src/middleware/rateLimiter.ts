@@ -6,7 +6,7 @@ import { ApiResponse } from '../types';
 const refreshCache = new NodeCache({ stdTTL: 86400 }); // 24 hours
 
 export const rateLimitRefresh = (req: Request, res: Response<ApiResponse>, next: NextFunction) => {
-  if (!APP_LIMITS.MANUAL_REFRESH_ENABLED) {
+  if (!APP_LIMITS.manualRefreshEnabled) {
     return next();
   }
 
@@ -16,11 +16,11 @@ export const rateLimitRefresh = (req: Request, res: Response<ApiResponse>, next:
   
   const currentCount = refreshCache.get<number>(key) || 0;
   
-  if (currentCount >= APP_LIMITS.MANUAL_REFRESH_LIMIT) {
+  if (currentCount >= APP_LIMITS.manualRefreshLimit) {
     return res.status(429).json({
       success: false,
       error: 'Rate limit exceeded',
-      message: `Maximum ${APP_LIMITS.MANUAL_REFRESH_LIMIT} manual refreshes per day allowed`
+      message: `Maximum ${APP_LIMITS.manualRefreshLimit} manual refreshes per day allowed`
     });
   }
   

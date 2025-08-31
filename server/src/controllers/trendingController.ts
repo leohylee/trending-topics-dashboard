@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { TrendingService } from '../services/trendingService';
-import { ApiResponse, RefreshRequest } from '../types';
+import { ApiResponse } from '../types';
+import { createSuccessResponse } from '../utils/api';
+import { apiLogger } from '../utils/logger';
 
 export class TrendingController {
   private trendingService: TrendingService;
@@ -11,85 +13,76 @@ export class TrendingController {
 
   getTrending = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
     try {
-      const keywords = req.query.keywords as string;
+      // Keywords validation handled by middleware
+      const keywords = req.validatedKeywords!;
       
-      if (!keywords) {
-        res.status(400).json({
-          success: false,
-          error: 'Keywords parameter is required'
-        });
-        return;
-      }
-
-      const keywordArray = keywords.split(',').map(k => k.trim()).filter(k => k.length > 0);
+      apiLogger.apiRequest('GET', '/trending', { keywords });
+      const data = await this.trendingService.getTrendingTopics(keywords);
       
-      if (keywordArray.length === 0) {
-        res.status(400).json({
-          success: false,
-          error: 'At least one valid keyword is required'
-        });
-        return;
-      }
-
-      const data = await this.trendingService.getTrendingTopics(keywordArray);
+      const response = createSuccessResponse(data, 'Trending topics retrieved successfully');
+      apiLogger.apiResponse(200, 'Trending topics retrieved', { count: data.length });
       
-      res.json({
-        success: true,
-        data,
-        message: 'Trending topics retrieved successfully'
-      });
+      res.json(response);
     } catch (error) {
+      apiLogger.error('Failed to get trending topics', error);
+      next(error);
+    }
+  };
+
+  getTrendingCached = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      // Keywords validation handled by middleware
+      const keywords = req.validatedKeywords!;
+      
+      apiLogger.apiRequest('GET', '/trending/cached', { keywords });
+      const result = await this.trendingService.getCachedTopics(keywords);
+      
+      const response = createSuccessResponse(result, 'Cached trending topics retrieved successfully');
+      apiLogger.apiResponse(200, 'Cached topics retrieved', { 
+        hits: result.cacheHits, 
+        total: result.totalRequested 
+      });
+      
+      res.json(response);
+    } catch (error) {
+      apiLogger.error('Failed to get cached trending topics', error);
       next(error);
     }
   };
 
   refreshTrending = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
     try {
-      const { keywords } = req.body as RefreshRequest;
+      // Keywords validation handled by middleware
+      const keywords = req.validatedKeywords!;
       
-      if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
-        res.status(400).json({
-          success: false,
-          error: 'Keywords array is required'
-        });
-        return;
-      }
-
-      const cleanKeywords = keywords.map(k => k.trim()).filter(k => k.length > 0);
+      apiLogger.apiRequest('POST', '/trending/refresh', { keywords });
+      const data = await this.trendingService.refreshTopics(keywords);
       
-      if (cleanKeywords.length === 0) {
-        res.status(400).json({
-          success: false,
-          error: 'At least one valid keyword is required'
-        });
-        return;
-      }
-
-      const data = await this.trendingService.refreshTopics(cleanKeywords);
+      const response = createSuccessResponse(data, 'Trending topics refreshed successfully');
+      apiLogger.apiResponse(200, 'Trending topics refreshed', { keywords: keywords.length });
       
-      res.json({
-        success: true,
-        data,
-        message: 'Trending topics refreshed successfully'
-      });
+      res.json(response);
     } catch (error) {
+      apiLogger.error('Failed to refresh trending topics', error);
       next(error);
     }
   };
 
   getHealth = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
     try {
-      res.json({
-        success: true,
-        data: {
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime(),
-          version: '1.0.0'
-        },
-        message: 'Service is healthy'
-      });
+      const healthData = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        version: '1.0.0'
+      };
+      
+      const response = createSuccessResponse(healthData, 'Service is healthy');
+      apiLogger.apiResponse(200, 'Health check successful');
+      
+      res.json(response);
     } catch (error) {
+      apiLogger.error('Health check failed', error);
       next(error);
     }
   };
@@ -97,12 +90,13 @@ export class TrendingController {
   getCacheStats = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
     try {
       const stats = this.trendingService.getCacheStats();
-      res.json({
-        success: true,
-        data: stats,
-        message: 'Cache statistics retrieved successfully'
-      });
+      
+      const response = createSuccessResponse(stats, 'Cache statistics retrieved successfully');
+      apiLogger.apiResponse(200, 'Cache stats retrieved', { cacheType: stats.cacheType });
+      
+      res.json(response);
     } catch (error) {
+      apiLogger.error('Failed to get cache statistics', error);
       next(error);
     }
   };
@@ -110,12 +104,48 @@ export class TrendingController {
   getCacheInfo = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
     try {
       const info = await this.trendingService.getCacheInfo();
-      res.json({
-        success: true,
-        data: info,
-        message: 'Cache information retrieved successfully'
-      });
+      
+      const response = createSuccessResponse(info, 'Cache information retrieved successfully');
+      apiLogger.apiResponse(200, 'Cache info retrieved');
+      
+      res.json(response);
     } catch (error) {
+      apiLogger.error('Failed to get cache information', error);
+      next(error);
+    }
+  };
+
+  clearCache = async (_: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      await this.trendingService.clearCache();
+      
+      const response = createSuccessResponse({ cleared: true }, 'Cache cleared successfully');
+      apiLogger.apiResponse(200, 'Cache cleared');
+      
+      res.json(response);
+    } catch (error) {
+      apiLogger.error('Failed to clear cache', error);
+      next(error);
+    }
+  };
+
+  clearCacheByKeyword = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      // Keyword validation handled by middleware
+      const keyword = req.validatedKeyword!;
+      
+      apiLogger.apiRequest('DELETE', `/cache/${keyword}`);
+      await this.trendingService.clearCacheByKeyword(keyword);
+      
+      const response = createSuccessResponse(
+        { keyword, cleared: true }, 
+        `Cache cleared for keyword: ${keyword}`
+      );
+      apiLogger.apiResponse(200, 'Cache cleared by keyword', { keyword });
+      
+      res.json(response);
+    } catch (error) {
+      apiLogger.error('Failed to clear cache by keyword', error);
       next(error);
     }
   };

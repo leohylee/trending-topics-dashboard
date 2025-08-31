@@ -1,6 +1,6 @@
 import { OpenAIService } from './openaiService';
 import { CacheService } from './cacheService';
-import { TrendingData } from '../types';
+import { TrendingData, CachedTrendingResponse } from '../types';
 import { APP_LIMITS } from '../config';
 
 export class TrendingService {
@@ -17,8 +17,8 @@ export class TrendingService {
       return [];
     }
 
-    if (keywords.length > APP_LIMITS.MAX_KEYWORDS) {
-      throw new Error(`Maximum ${APP_LIMITS.MAX_KEYWORDS} keywords allowed`);
+    if (keywords.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} keywords allowed`);
     }
 
     const cachedData = await this.cacheService.getMultiple(keywords);
@@ -57,13 +57,59 @@ export class TrendingService {
     return results.sort((a, b) => keywords.indexOf(a.keyword) - keywords.indexOf(b.keyword));
   }
 
+  async getCachedTopics(keywords: string[]): Promise<CachedTrendingResponse> {
+    if (keywords.length === 0) {
+      return {
+        cachedData: [],
+        uncachedKeywords: [],
+        totalRequested: 0,
+        cacheHits: 0
+      };
+    }
+
+    if (keywords.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} keywords allowed`);
+    }
+
+    const cachedData = await this.cacheService.getMultiple(keywords);
+    const validCachedData: TrendingData[] = [];
+    const uncachedKeywords: string[] = [];
+
+    console.log(`🔍 Checking cache for ${keywords.length} keywords...`);
+
+    for (const keyword of keywords) {
+      const cached = cachedData.get(keyword);
+      if (cached && this.isCacheValid(cached)) {
+        console.log(`✅ Cache HIT for keyword: ${keyword}`);
+        validCachedData.push({
+          ...cached,
+          cached: true
+        });
+      } else {
+        console.log(`❌ Cache MISS for keyword: ${keyword}`);
+        uncachedKeywords.push(keyword);
+      }
+    }
+
+    const response: CachedTrendingResponse = {
+      cachedData: validCachedData.sort((a, b) => keywords.indexOf(a.keyword) - keywords.indexOf(b.keyword)),
+      uncachedKeywords,
+      totalRequested: keywords.length,
+      cacheHits: validCachedData.length
+    };
+
+    console.log(`📊 Cache results: ${response.cacheHits}/${response.totalRequested} hits (${Math.round(response.cacheHits / response.totalRequested * 100)}%)`);
+    
+    return response;
+  }
+
   async refreshTopics(keywords: string[]): Promise<TrendingData[]> {
     if (keywords.length === 0) {
       return [];
     }
 
-    if (keywords.length > APP_LIMITS.MAX_KEYWORDS) {
-      throw new Error(`Maximum ${APP_LIMITS.MAX_KEYWORDS} keywords allowed`);
+    if (keywords.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} keywords allowed`);
     }
 
     try {
@@ -85,12 +131,12 @@ export class TrendingService {
   private async fetchFreshData(keywords: string[]): Promise<TrendingData[]> {
     const keywordTopics = await this.openaiService.getTrendingTopics(
       keywords,
-      APP_LIMITS.MAX_RESULTS_PER_KEYWORD
+      APP_LIMITS.maxResultsPerKeyword
     );
 
     return keywordTopics.map(item => ({
       keyword: item.keyword,
-      topics: item.topics.slice(0, APP_LIMITS.MAX_RESULTS_PER_KEYWORD),
+      topics: item.topics.slice(0, APP_LIMITS.maxResultsPerKeyword),
       lastUpdated: new Date(),
       cached: false
     }));
@@ -99,7 +145,7 @@ export class TrendingService {
   private isCacheValid(data: TrendingData): boolean {
     const now = new Date();
     const cacheAge = now.getTime() - new Date(data.lastUpdated).getTime();
-    const maxAge = APP_LIMITS.CACHE_DURATION_HOURS * 60 * 60 * 1000; // Convert to milliseconds
+    const maxAge = APP_LIMITS.cacheDurationHours * 60 * 60 * 1000; // Convert to milliseconds
     
     return cacheAge < maxAge;
   }
@@ -125,6 +171,16 @@ export class TrendingService {
 
   async getCacheInfo() {
     return await this.cacheService.getCacheInfo();
+  }
+
+  async clearCache(): Promise<void> {
+    await this.cacheService.clear();
+    console.log('🗑️ Cache cleared successfully');
+  }
+
+  async clearCacheByKeyword(keyword: string): Promise<void> {
+    await this.cacheService.delete(keyword);
+    console.log(`🗑️ Cache cleared for keyword: ${keyword}`);
   }
 
   async disconnect(): Promise<void> {

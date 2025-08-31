@@ -16,6 +16,13 @@ dist/
 build/
 *.tsbuildinfo
 
+# TypeScript compilation artifacts
+*.js.map
+*.d.ts.map
+# Only ignore generated JS/d.ts files in shared folder
+shared/**/*.js
+shared/**/*.d.ts
+
 # Logs
 logs
 *.log
