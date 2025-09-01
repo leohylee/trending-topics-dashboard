@@ -31,25 +31,28 @@ export const storage = {
           id: 'default-1',
           keyword: 'Technology',
           maxResults: 5,
-          position: { x: 0, y: 0, w: 1, h: 2 }
+          position: { x: 0, y: 0, w: 1, h: 2 },
+          cacheRetention: { value: 1, unit: 'hour' }
         },
         {
           id: 'default-2',
           keyword: 'Science',
           maxResults: 5,
-          position: { x: 1, y: 0, w: 1, h: 2 }
+          position: { x: 1, y: 0, w: 1, h: 2 },
+          cacheRetention: { value: 1, unit: 'hour' }
         }
       ]
     };
   },
 
-  addSection(keyword: string, maxResults: number = 5): Section {
+  addSection(keyword: string, maxResults: number = 5, cacheRetention: { value: number; unit: 'hour' | 'day' } = { value: 1, unit: 'hour' }): Section {
     const settings = this.getSettings();
     const newSection: Section = {
       id: `section-${Date.now()}`,
       keyword,
       maxResults,
-      position: { x: 0, y: 0, w: 1, h: 2 }
+      position: { x: 0, y: 0, w: 1, h: 2 },
+      cacheRetention
     };
     
     settings.sections.push(newSection);

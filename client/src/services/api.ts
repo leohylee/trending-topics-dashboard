@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest, CachedTrendingResponse } from '../types';
+import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest, CachedTrendingResponse, Section } from '../types';
 import { transformDatesInResponse, handleApiError } from '../../../shared/utils/api';
 import { API_CONFIG } from '../config';
 
@@ -122,6 +122,61 @@ export const trendingApi = {
     }
     
     return response.data.data!;
+  },
+
+  async getTrendingWithRetention(sections: Section[]): Promise<TrendingData[]> {
+    const payload = {
+      sections: sections.map(section => ({
+        keyword: section.keyword,
+        maxResults: section.maxResults,
+        cacheRetention: section.cacheRetention
+      }))
+    };
+    
+    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/with-retention', payload);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to fetch trending topics with retention');
+    }
+    
+    return processResponseData(response.data.data!);
+  },
+
+  async refreshTrendingWithRetention(sections: Section[]): Promise<TrendingData[]> {
+    const payload = {
+      sections: sections.map(section => ({
+        keyword: section.keyword,
+        maxResults: section.maxResults,
+        cacheRetention: section.cacheRetention
+      }))
+    };
+    
+    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh-with-retention', payload);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to refresh trending topics with retention');
+    }
+    
+    return processResponseData(response.data.data!);
+  },
+
+  async refreshSingleSectionWithRetention(section: Section): Promise<TrendingData> {
+    const payload = {
+      sections: [{
+        keyword: section.keyword,
+        maxResults: section.maxResults,
+        cacheRetention: section.cacheRetention
+      }]
+    };
+    
+    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh-with-retention', payload);
+    
+    if (!response.data.success) {
+      throw new Error(response.data.error || 'Failed to refresh trending topic with retention');
+    }
+    
+    const result = response.data.data![0];
+    return processResponseData(result);
   }
 };
 

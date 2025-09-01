@@ -4,7 +4,7 @@ import { RefreshCw, Settings, Plus } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
 import { SettingsModal } from './SettingsModal';
 import { ThemeToggle } from './ThemeToggle';
-import { useTrending, useRefreshTrending, useRefreshSingleSection } from '../hooks/useTrending';
+import { useTrendingWithRetention, useRefreshTrendingWithRetention, useRefreshSingleSectionWithRetention } from '../hooks/useTrending';
 import { Section, TrendingData } from '../types';
 import { storage } from '../utils/storage';
 import 'react-grid-layout/css/styles.css';
@@ -18,9 +18,11 @@ export const Dashboard: React.FC = () => {
 
   const keywords = useMemo(() => sections.map(s => s.keyword), [sections]);
   
-  const { data: trendingData, isLoading, isProgressiveLoading, error } = useTrending(keywords);
-  const refreshMutation = useRefreshTrending();
-  const refreshSingleMutation = useRefreshSingleSection();
+  // Use the new hook with cache retention support
+  const { data: trendingData, isLoading, error } = useTrendingWithRetention(sections);
+  const isProgressiveLoading = false; // Simplified for now - can be enhanced later
+  const refreshMutation = useRefreshTrendingWithRetention();
+  const refreshSingleMutation = useRefreshSingleSectionWithRetention();
 
   const handleLayoutChange = (layout: any[]) => {
     const updatedSections = sections.map(section => {
@@ -43,8 +45,8 @@ export const Dashboard: React.FC = () => {
     storage.saveSettings({ sections: updatedSections });
   };
 
-  const handleAddSection = (keyword: string, maxResults: number) => {
-    const newSection = storage.addSection(keyword, maxResults);
+  const handleAddSection = (keyword: string, maxResults: number, cacheRetention: { value: number; unit: 'hour' | 'day' }) => {
+    const newSection = storage.addSection(keyword, maxResults, cacheRetention);
     setSections(prev => [...prev, newSection]);
   };
 
@@ -67,13 +69,16 @@ export const Dashboard: React.FC = () => {
   };
 
   const handleRefresh = () => {
-    if (keywords.length > 0) {
-      refreshMutation.mutate(keywords);
+    if (sections.length > 0) {
+      refreshMutation.mutate(sections);
     }
   };
 
   const handleSingleRefresh = (keyword: string) => {
-    refreshSingleMutation.mutate(keyword);
+    const section = sections.find(s => s.keyword === keyword);
+    if (section) {
+      refreshSingleMutation.mutate(section);
+    }
   };
 
   const getTrendingDataForKeyword = (keyword: string): TrendingData | undefined => {
@@ -185,13 +190,13 @@ export const Dashboard: React.FC = () => {
                 <TrendingSection
                   section={section}
                   data={getTrendingDataForKeyword(section.keyword)}
-                  isLoading={isLoading && !trendingData.length} // Only show loading if no data at all
+                  isLoading={isLoading && !trendingData} // Only show loading if no data at all
                   isProgressiveLoading={isProgressiveLoading && !getTrendingDataForKeyword(section.keyword)}
                   error={error}
                   onRemove={handleRemoveSection}
                   onSettings={handleSectionSettings}
                   onRefresh={handleSingleRefresh}
-                  isRefreshing={refreshSingleMutation.isPending && refreshSingleMutation.variables === section.keyword}
+                  isRefreshing={refreshSingleMutation.isPending && refreshSingleMutation.variables?.keyword === section.keyword}
                 />
               </div>
             ))}
