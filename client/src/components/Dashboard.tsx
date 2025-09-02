@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { RefreshCw, Settings, Plus } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
@@ -16,7 +16,7 @@ export const Dashboard: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
 
-  const keywords = useMemo(() => sections.map(s => s.keyword), [sections]);
+  // const keywords = useMemo(() => sections.map(s => s.keyword), [sections]); // Not needed with retention-aware hooks
   
   // Use the new hook with cache retention support
   const { data: trendingData, isLoading, error } = useTrendingWithRetention(sections);
