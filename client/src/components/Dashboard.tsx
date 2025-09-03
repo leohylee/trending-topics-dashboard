@@ -4,8 +4,8 @@ import { RefreshCw, Settings, Plus } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
 import { SettingsModal } from './SettingsModal';
 import { ThemeToggle } from './ThemeToggle';
-import { useTrendingWithRetention, useRefreshTrendingWithRetention, useRefreshSingleSectionWithRetention } from '../hooks/useTrending';
-import { Section, TrendingData } from '../types';
+import { useProgressiveTrendingWithRetention, useRefreshSingleSectionWithRetention } from '../hooks/useTrending';
+import { Section } from '../types';
 import { storage } from '../utils/storage';
 import 'react-grid-layout/css/styles.css';
 
@@ -16,13 +16,14 @@ export const Dashboard: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
 
-  // const keywords = useMemo(() => sections.map(s => s.keyword), [sections]); // Not needed with retention-aware hooks
-  
-  // Use the new hook with cache retention support
-  const { data: trendingData, isLoading, error } = useTrendingWithRetention(sections);
-  const isProgressiveLoading = false; // Simplified for now - can be enhanced later
-  const refreshMutation = useRefreshTrendingWithRetention();
+  // Use progressive loading - each section loads independently
+  const sectionQueries = useProgressiveTrendingWithRetention(sections);
   const refreshSingleMutation = useRefreshSingleSectionWithRetention();
+
+  // Helper to get data for a specific section
+  const getSectionQuery = (sectionId: string) => {
+    return sectionQueries.find(q => q.section.id === sectionId);
+  };
 
   const handleLayoutChange = (layout: any[]) => {
     const updatedSections = sections.map(section => {
@@ -70,7 +71,10 @@ export const Dashboard: React.FC = () => {
 
   const handleRefresh = () => {
     if (sections.length > 0) {
-      refreshMutation.mutate(sections);
+      // Refresh all sections individually for immediate visual feedback
+      sections.forEach(section => {
+        refreshSingleMutation.mutate(section);
+      });
     }
   };
 
@@ -81,9 +85,8 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const getTrendingDataForKeyword = (keyword: string): TrendingData | undefined => {
-    return trendingData?.find(data => data.keyword === keyword);
-  };
+  // Check if any sections are loading
+  const hasAnySectionLoading = sectionQueries.some(q => q.isLoading);
 
   const layouts = {
     lg: sections.map(section => ({
@@ -133,19 +136,19 @@ export const Dashboard: React.FC = () => {
               Trending Topics
             </h1>
             <div className="flex items-center gap-3">
-              {isProgressiveLoading && (
+              {hasAnySectionLoading && (
                 <div className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
-                  Loading fresh data...
+                  Loading sections...
                 </div>
               )}
               <ThemeToggle />
               <button
                 onClick={handleRefresh}
-                disabled={refreshMutation.isPending || isLoading}
+                disabled={refreshSingleMutation.isPending}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
               >
-                <RefreshCw size={16} className={(refreshMutation.isPending || isProgressiveLoading) ? 'animate-spin' : ''} />
-                {isProgressiveLoading ? 'Loading...' : 'Refresh'}
+                <RefreshCw size={16} className={refreshSingleMutation.isPending ? 'animate-spin' : ''} />
+                {refreshSingleMutation.isPending ? 'Refreshing...' : 'Refresh All'}
               </button>
               <button
                 onClick={() => setShowSettings(true)}
@@ -185,21 +188,24 @@ export const Dashboard: React.FC = () => {
             isResizable={true}
             margin={[16, 16]}
           >
-            {sections.map((section) => (
-              <div key={section.id}>
-                <TrendingSection
-                  section={section}
-                  data={getTrendingDataForKeyword(section.keyword)}
-                  isLoading={isLoading && !trendingData} // Only show loading if no data at all
-                  isProgressiveLoading={isProgressiveLoading && !getTrendingDataForKeyword(section.keyword)}
-                  error={error}
-                  onRemove={handleRemoveSection}
-                  onSettings={handleSectionSettings}
-                  onRefresh={handleSingleRefresh}
-                  isRefreshing={refreshSingleMutation.isPending && refreshSingleMutation.variables?.keyword === section.keyword}
-                />
-              </div>
-            ))}
+            {sections.map((section) => {
+              const sectionQuery = getSectionQuery(section.id);
+              return (
+                <div key={section.id}>
+                  <TrendingSection
+                    section={section}
+                    data={sectionQuery?.data}
+                    isLoading={sectionQuery?.isLoading || false}
+                    isProgressiveLoading={false} // Not needed with individual loading
+                    error={sectionQuery?.error}
+                    onRemove={handleRemoveSection}
+                    onSettings={handleSectionSettings}
+                    onRefresh={handleSingleRefresh}
+                    isRefreshing={refreshSingleMutation.isPending && refreshSingleMutation.variables?.keyword === section.keyword}
+                  />
+                </div>
+              );
+            })}
           </ResponsiveGridLayout>
         )}
       </main>

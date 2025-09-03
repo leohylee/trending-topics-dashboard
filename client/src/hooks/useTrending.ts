@@ -224,6 +224,12 @@ export const useRefreshSingleSectionWithRetention = () => {
         }
       );
 
+      // Update individual section query
+      queryClient.setQueryData(
+        ['trending-section', section.keyword, section.cacheRetention],
+        newData
+      );
+
       // Invalidate all trending queries
       queryClient.invalidateQueries({
         queryKey: ['trending'],
@@ -239,4 +245,23 @@ export const useRefreshSingleSectionWithRetention = () => {
       }
     },
   });
+};
+
+// Individual section hook for progressive loading
+export const useTrendingSectionWithRetention = (section: Section) => {
+  return useQuery({
+    queryKey: ['trending-section', section.keyword, section.cacheRetention],
+    queryFn: () => trendingApi.getTrendingWithRetention([section]).then(data => data[0]),
+    enabled: true,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+  });
+};
+
+// Progressive loading hook that manages individual sections
+export const useProgressiveTrendingWithRetention = (sections: Section[]) => {
+  return sections.map(section => ({
+    section,
+    ...useTrendingSectionWithRetention(section)
+  }));
 };
