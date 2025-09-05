@@ -69,19 +69,20 @@ export class CacheService {
     return null;
   }
 
-  async set(keyword: string, data: TrendingData): Promise<void> {
+  async set(keyword: string, data: TrendingData, customTtlSeconds?: number): Promise<void> {
     const key = this.getCacheKey(keyword);
     const cacheData = { ...data, cached: true };
+    const ttl = customTtlSeconds || (APP_LIMITS.cacheDurationHours * 3600);
     
     try {
       if (this.useRedis && this.redisClient) {
         await this.redisClient.setEx(
           key,
-          APP_LIMITS.cacheDurationHours * 3600,
+          ttl,
           JSON.stringify(cacheData)
         );
       } else {
-        this.nodeCache.set(key, cacheData);
+        this.nodeCache.set(key, cacheData, ttl);
       }
     } catch (error) {
       console.error('Cache set error:', error);
@@ -101,11 +102,12 @@ export class CacheService {
     return results;
   }
 
-  async setMultiple(dataMap: Map<string, TrendingData>): Promise<void> {
+  async setMultiple(dataMap: Map<string, TrendingData>, ttlMap?: Map<string, number>): Promise<void> {
     const promises: Promise<void>[] = [];
     
     for (const [keyword, data] of dataMap) {
-      promises.push(this.set(keyword, data));
+      const customTtl = ttlMap?.get(keyword);
+      promises.push(this.set(keyword, data, customTtl));
     }
     
     await Promise.all(promises);

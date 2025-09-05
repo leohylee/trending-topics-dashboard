@@ -6,7 +6,7 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   sections: Section[];
-  onAddSection: (keyword: string, maxResults: number) => void;
+  onAddSection: (keyword: string, maxResults: number, cacheRetention: { value: number; unit: 'hour' | 'day' }) => void;
   onUpdateSection: (sectionId: string, updates: Partial<Section>) => void;
   editingSection?: Section | null;
 }
@@ -21,14 +21,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [keyword, setKeyword] = useState('');
   const [maxResults, setMaxResults] = useState(5);
+  const [cacheRetentionValue, setCacheRetentionValue] = useState(1);
+  const [cacheRetentionUnit, setCacheRetentionUnit] = useState<'hour' | 'day'>('hour');
   
   useEffect(() => {
     if (editingSection) {
       setKeyword(editingSection.keyword);
       setMaxResults(editingSection.maxResults);
+      setCacheRetentionValue(editingSection.cacheRetention?.value || 1);
+      setCacheRetentionUnit(editingSection.cacheRetention?.unit || 'hour');
     } else {
       setKeyword('');
       setMaxResults(5);
+      setCacheRetentionValue(1);
+      setCacheRetentionUnit('hour');
     }
   }, [editingSection, isOpen]);
 
@@ -37,17 +43,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     
     if (!keyword.trim()) return;
     
+    const cacheRetention = {
+      value: cacheRetentionValue,
+      unit: cacheRetentionUnit
+    };
+    
     if (editingSection) {
       onUpdateSection(editingSection.id, {
         keyword: keyword.trim(),
-        maxResults
+        maxResults,
+        cacheRetention
       });
     } else {
-      onAddSection(keyword.trim(), maxResults);
+      onAddSection(keyword.trim(), maxResults, cacheRetention);
     }
     
     setKeyword('');
     setMaxResults(5);
+    setCacheRetentionValue(1);
+    setCacheRetentionUnit('hour');
     onClose();
   };
 
@@ -104,6 +118,46 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span>{APP_LIMITS.minResultsPerKeyword}</span>
               <span>{APP_LIMITS.maxResultsPerKeyword}</span>
             </div>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+              Cache Retention Time
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min={1}
+                max={cacheRetentionUnit === 'hour' ? 168 : 7}
+                value={cacheRetentionValue}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  const maxValue = cacheRetentionUnit === 'hour' ? 168 : 7;
+                  if (value >= 1 && value <= maxValue) {
+                    setCacheRetentionValue(value);
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              />
+              <select
+                value={cacheRetentionUnit}
+                onChange={(e) => {
+                  const newUnit = e.target.value as 'hour' | 'day';
+                  setCacheRetentionUnit(newUnit);
+                  const maxValue = newUnit === 'hour' ? 168 : 7;
+                  if (cacheRetentionValue > maxValue) {
+                    setCacheRetentionValue(maxValue);
+                  }
+                }}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              >
+                <option value="hour">Hours</option>
+                <option value="day">Days</option>
+              </select>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Range: 1-{cacheRetentionUnit === 'hour' ? 168 : 7} {cacheRetentionUnit}s (max 7 days)
+            </p>
           </div>
           
           {!isEditing && (

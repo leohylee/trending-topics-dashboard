@@ -64,6 +64,21 @@ export interface RefreshRequest {
   keywords: string[];
 }
 
+export interface SectionCacheRetention {
+  value: number;
+  unit: 'hour' | 'day';
+}
+
+export interface SectionWithCacheRetention {
+  keyword: string;
+  maxResults: number;
+  cacheRetention?: SectionCacheRetention;
+}
+
+export interface TrendingRequestWithRetention {
+  sections: SectionWithCacheRetention[];
+}
+
 export interface ApiError extends Error {
   status?: number;
   code?: string;

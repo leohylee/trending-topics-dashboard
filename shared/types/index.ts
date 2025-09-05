@@ -27,6 +27,10 @@ export interface Section {
     h?: number; // Optional for client grid layout
   };
   createdAt?: Date;
+  cacheRetention?: {
+    value: number;
+    unit: 'hour' | 'day';
+  };
 }
 
 // API communication interfaces

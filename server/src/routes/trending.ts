@@ -9,7 +9,9 @@ export const createTrendingRoutes = (): Router => {
 
   router.get('/trending', validateKeywordsQuery, controller.getTrending);
   router.get('/trending/cached', validateKeywordsQuery, controller.getTrendingCached);
+  router.post('/trending/with-retention', controller.getTrendingWithRetention);
   router.post('/trending/refresh', rateLimitRefresh, validateKeywordsBody, controller.refreshTrending);
+  router.post('/trending/refresh-with-retention', rateLimitRefresh, controller.refreshTrendingWithRetention);
   router.get('/health', controller.getHealth);
   router.get('/cache/stats', controller.getCacheStats);
   router.get('/cache/info', controller.getCacheInfo);

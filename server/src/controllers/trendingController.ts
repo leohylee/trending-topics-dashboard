@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { TrendingService } from '../services/trendingService';
-import { ApiResponse } from '../types';
+import { ApiResponse, TrendingRequestWithRetention } from '../types';
 import { createSuccessResponse } from '../utils/api';
 import { apiLogger } from '../utils/logger';
 
@@ -146,6 +146,58 @@ export class TrendingController {
       res.json(response);
     } catch (error) {
       apiLogger.error('Failed to clear cache by keyword', error);
+      next(error);
+    }
+  };
+
+  getTrendingWithRetention = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      const requestBody: TrendingRequestWithRetention = req.body;
+      
+      if (!requestBody.sections || !Array.isArray(requestBody.sections)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request body: sections array is required',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      apiLogger.apiRequest('POST', '/trending/with-retention', { sectionsCount: requestBody.sections.length });
+      const data = await this.trendingService.getTrendingTopicsWithRetention(requestBody.sections);
+      
+      const response = createSuccessResponse(data, 'Trending topics retrieved with custom retention');
+      apiLogger.apiResponse(200, 'Trending topics retrieved with retention', { count: data.length });
+      
+      res.json(response);
+    } catch (error) {
+      apiLogger.error('Failed to get trending topics with retention', error);
+      next(error);
+    }
+  };
+
+  refreshTrendingWithRetention = async (req: Request, res: Response<ApiResponse>, next: NextFunction): Promise<void> => {
+    try {
+      const requestBody: TrendingRequestWithRetention = req.body;
+      
+      if (!requestBody.sections || !Array.isArray(requestBody.sections)) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid request body: sections array is required',
+          timestamp: new Date().toISOString()
+        });
+        return;
+      }
+
+      apiLogger.apiRequest('POST', '/trending/refresh-with-retention', { sectionsCount: requestBody.sections.length });
+      const data = await this.trendingService.refreshTopicsWithRetention(requestBody.sections);
+      
+      const response = createSuccessResponse(data, 'Trending topics refreshed with custom retention');
+      apiLogger.apiResponse(200, 'Trending topics refreshed with retention', { count: data.length });
+      
+      res.json(response);
+    } catch (error) {
+      apiLogger.error('Failed to refresh trending topics with retention', error);
       next(error);
     }
   };
