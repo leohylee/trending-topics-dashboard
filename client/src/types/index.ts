@@ -4,11 +4,6 @@ export type {
   TrendingTopic,
   TrendingData,
   ApiResponse,
-  HealthResponse,
-  CacheStatsResponse,
-  CacheInfoResponse,
-  CachedTrendingResponse,
-  RefreshRequest,
   ApiError
 } from '../../../shared/types';
 import baseConfig from '../../../config/base.json';

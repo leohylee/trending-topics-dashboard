@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest, CachedTrendingResponse, Section } from '../types';
+import { TrendingData, ApiResponse, Section } from '../types';
 import { transformDatesInResponse, handleApiError } from '../../../shared/utils/api';
 import { API_CONFIG } from '../config';
 
@@ -49,80 +49,8 @@ function processResponseData<T>(data: T): T {
 }
 
 export const trendingApi = {
-  async getTrending(keywords: string[]): Promise<TrendingData[]> {
-    const keywordsParam = keywords.join(',');
-    const response = await api.get<ApiResponse<TrendingData[]>>(`/trending?keywords=${encodeURIComponent(keywordsParam)}`);
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch trending topics');
-    }
-    
-    return processResponseData(response.data.data!);
-  },
-
-  async getCachedTrending(keywords: string[]): Promise<CachedTrendingResponse> {
-    const keywordsParam = keywords.join(',');
-    const response = await api.get<ApiResponse<CachedTrendingResponse>>(`/trending/cached?keywords=${encodeURIComponent(keywordsParam)}`);
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch cached trending topics');
-    }
-    
-    return processResponseData(response.data.data!);
-  },
-
-  async refreshTrending(keywords: string[]): Promise<TrendingData[]> {
-    const payload: RefreshRequest = { keywords };
-    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh', payload);
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to refresh trending topics');
-    }
-    
-    return processResponseData(response.data.data!);
-  },
-
-  async refreshSingleKeyword(keyword: string): Promise<TrendingData> {
-    const payload: RefreshRequest = { keywords: [keyword] };
-    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh', payload);
-    
-    if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to refresh trending topic');
-    }
-    
-    const result = response.data.data![0];
-    return processResponseData(result);
-  },
-
-  async getHealth(): Promise<HealthResponse> {
-    const response = await api.get<ApiResponse<HealthResponse>>('/health');
-    
-    if (!response.data.success) {
-      throw new Error('Health check failed');
-    }
-    
-    return response.data.data!;
-  },
-
-  async getCacheStats(): Promise<CacheStatsResponse> {
-    const response = await api.get<ApiResponse<CacheStatsResponse>>('/cache/stats');
-    
-    if (!response.data.success) {
-      throw new Error('Failed to fetch cache stats');
-    }
-    
-    return response.data.data!;
-  },
-
-  async getCacheInfo(): Promise<CacheInfoResponse> {
-    const response = await api.get<ApiResponse<CacheInfoResponse>>('/cache/info');
-    
-    if (!response.data.success) {
-      throw new Error('Failed to fetch cache info');
-    }
-    
-    return response.data.data!;
-  },
+  // Removed unused legacy API methods: getTrending, getCachedTrending, refreshTrending, refreshSingleKeyword
+  // These were replaced by cache retention API methods
 
   async getTrendingWithRetention(sections: Section[]): Promise<TrendingData[]> {
     const payload = {
