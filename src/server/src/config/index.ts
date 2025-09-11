@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import baseConfig from '../../../config/base.json';
+import baseConfig from '../../../../config/base.json';
 
 dotenv.config();
 

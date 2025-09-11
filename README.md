@@ -1,5 +1,47 @@
 # Trending Topics Dashboard
 
+A React + Node.js application that provides real-time trending topics using OpenAI's web search capabilities, deployed as a serverless AWS application.
+
+## 🏗️ Project Structure
+
+```
+trending-topics-dashboard/
+├── src/
+│   ├── client/              # React frontend (Vite + TypeScript)
+│   │   ├── src/
+│   │   │   ├── components/  # React components
+│   │   │   ├── hooks/       # Custom React hooks
+│   │   │   ├── services/    # API services
+│   │   │   ├── types/       # TypeScript type definitions
+│   │   │   └── config/      # Frontend configuration
+│   │   ├── public/          # Static assets
+│   │   └── package.json
+│   │
+│   ├── server/              # Node.js backend (Express + TypeScript)
+│   │   ├── src/
+│   │   │   ├── services/    # Business logic services
+│   │   │   ├── routes/      # API routes
+│   │   │   ├── middleware/  # Express middleware
+│   │   │   └── config/      # Server configuration
+│   │   └── package.json
+│   │
+│   └── shared/              # Shared code between client & server
+│       ├── types/           # TypeScript interfaces
+│       ├── utils/           # Utility functions
+│       └── config/          # Shared configuration
+│
+├── deployment/              # AWS deployment configuration
+│   ├── lambda/              # Lambda function code
+│   ├── scripts/             # Deployment scripts
+│   ├── config/              # CloudFront & AWS config
+│   └── docs/                # Deployment documentation
+│
+├── config/                  # Environment configurations
+│   └── base.json           # Base application config
+│
+└── docs/                   # Project documentation
+```
+
 A real-time trending topics dashboard that provides **factual, current information** from the internet using OpenAI's advanced web search capabilities with cost-effective `gpt-4o-mini`.
 
 ## 🌟 Key Features

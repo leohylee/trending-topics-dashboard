@@ -10,9 +10,9 @@ export type {
   CachedTrendingResponse,
   RefreshRequest,
   ApiError
-} from '../../../shared/types';
-import baseConfig from '../../../config/base.json';
-import type { Section } from '../../../shared/types';
+} from '../../shared/types';
+import baseConfig from '../../../../config/base.json';
+import type { Section } from '../../shared/types';
 
 // Client-specific types
 export interface DashboardSettings {
