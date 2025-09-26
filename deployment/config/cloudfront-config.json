@@ -1,0 +1,47 @@
+{
+  "CallerReference": "trends-dashboard-2025-09-09",
+  "Comment": "Trending Topics Dashboard - trends.leohyl.me",
+  "DefaultCacheBehavior": {
+    "TargetOriginId": "S3-trends-leohyl-me",
+    "ViewerProtocolPolicy": "redirect-to-https",
+    "TrustedSigners": {
+      "Enabled": false,
+      "Quantity": 0
+    },
+    "ForwardedValues": {
+      "QueryString": false,
+      "Cookies": {
+        "Forward": "none"
+      }
+    },
+    "MinTTL": 0,
+    "DefaultTTL": 86400,
+    "MaxTTL": 31536000,
+    "Compress": true
+  },
+  "Origins": {
+    "Quantity": 1,
+    "Items": [
+      {
+        "Id": "S3-trends-leohyl-me",
+        "DomainName": "trends-leohyl-me.s3-website.eu-west-2.amazonaws.com",
+        "CustomOriginConfig": {
+          "HTTPPort": 80,
+          "HTTPSPort": 443,
+          "OriginProtocolPolicy": "http-only"
+        }
+      }
+    ]
+  },
+  "Aliases": {
+    "Quantity": 1,
+    "Items": ["trends.leohyl.me"]
+  },
+  "ViewerCertificate": {
+    "ACMCertificateArn": "arn:aws:acm:us-east-1:128844309521:certificate/1d0cc708-4e15-4a9c-bc61-aae746db62cf",
+    "SSLSupportMethod": "sni-only",
+    "MinimumProtocolVersion": "TLSv1.2_2021"
+  },
+  "Enabled": true,
+  "DefaultRootObject": "index.html"
+}

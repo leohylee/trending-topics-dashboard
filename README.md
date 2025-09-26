@@ -342,19 +342,24 @@ curl http://localhost:3000/api/health  # Client proxy test
 
 ## 📚 Documentation
 
-- **Configuration Guide**: `/config/README.md`
-- **API Documentation**: See API Endpoints section above
-- **Architecture Overview**: See Project Architecture section
-- **Environment Setup**: See Environment Variables section
+- **[Technical Specification](/SPECIFICATION.md)** - Comprehensive technical details and architecture
+- **[Development Guide](/DEVELOPMENT.md)** - Development workflow, implementation notes, and future enhancements  
+- **[Configuration Guide](/config/README.md)** - Configuration system and environment variables
+- **[Deployment Guide](/deployment/README.md)** - AWS deployment process and production setup
 
 ## 🎯 Production Deployment
 
-1. **Environment Setup**: Configure all required environment variables
-2. **Build Applications**: Run `npm run build` in both server and client
-3. **Redis Setup**: Configure Redis for production caching
-4. **Rate Limiting**: Enable `manualRefreshEnabled: true` in production
-5. **Monitoring**: Use structured logging and health check endpoints
-6. **Reverse Proxy**: Configure nginx/Apache for client + server routing
+For detailed deployment instructions, see **[Deployment Guide](/deployment/README.md)**.
+
+**Quick deployment**:
+```bash
+cd deployment/scripts
+./setup-infrastructure.sh    # Set up AWS resources
+./build-and-deploy.sh        # Deploy backend from src/server
+./deploy-frontend.sh         # Deploy React frontend
+```
+
+**Live deployment**: https://trends.leohyl.me
 
 ---
 

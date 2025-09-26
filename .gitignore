@@ -6,6 +6,8 @@ yarn-error.log*
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -15,6 +17,15 @@ yarn-error.log*
 dist/
 build/
 *.tsbuildinfo
+
+# Lambda build artifacts (generated from src/server)
+deployment/lambda-build/
+# Lambda deployment packages
+*.zip
+deployment/**/*.zip
+
+# Temporary/one-off deployment scripts
+deployment/scripts/temp/
 
 # TypeScript compilation artifacts
 *.js.map

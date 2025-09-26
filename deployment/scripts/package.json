@@ -1,0 +1,25 @@
+{
+  "name": "trending-topics-aws-deployment",
+  "version": "1.0.0",
+  "description": "AWS deployment scripts for trending topics dashboard",
+  "scripts": {
+    "setup": "./setup-infrastructure.sh",
+    "deploy:frontend": "./deploy-frontend.sh",
+    "deploy:backend": "./deploy-backend.sh",
+    "deploy:all": "npm run deploy:backend && npm run deploy:frontend",
+    "logs:lambda": "aws logs tail /aws/lambda/trending-getTrending --follow",
+    "invalidate:cloudfront": "aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths '/*'",
+    "check:health": "curl -s https://trends.leohyl.me/api/health | jq"
+  },
+  "keywords": [
+    "aws",
+    "lambda",
+    "s3",
+    "cloudfront",
+    "deployment",
+    "trending-topics"
+  ],
+  "devDependencies": {
+    "aws-cli": "^2.0.0"
+  }
+}
