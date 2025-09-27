@@ -1,4 +1,4 @@
-import baseConfig from '../../../../config/base.json';
+import baseConfig from './base';
 
 // Client-specific configuration
 export const config = {
