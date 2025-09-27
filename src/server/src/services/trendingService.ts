@@ -1,6 +1,6 @@
 import { OpenAIService } from './openaiService';
 import { CacheService } from './cacheService';
-import { TrendingData, CachedTrendingResponse } from '../types';
+import { TrendingData, CachedTrendingResponse, SectionWithCacheRetention } from '../types';
 import { APP_LIMITS } from '../config';
 
 export class TrendingService {
@@ -181,6 +181,128 @@ export class TrendingService {
   async clearCacheByKeyword(keyword: string): Promise<void> {
     await this.cacheService.delete(keyword);
     console.log(`🗑️ Cache cleared for keyword: ${keyword}`);
+  }
+
+  async getTrendingTopicsWithRetention(sections: SectionWithCacheRetention[]): Promise<TrendingData[]> {
+    if (sections.length === 0) {
+      return [];
+    }
+
+    if (sections.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} sections allowed`);
+    }
+
+    const keywords = sections.map(s => s.keyword);
+    const cachedData = await this.cacheService.getMultiple(keywords);
+    const uncachedSections: SectionWithCacheRetention[] = [];
+    const results: TrendingData[] = [];
+
+    // Create a map for quick section lookup
+    const sectionMap = new Map(sections.map(s => [s.keyword, s]));
+
+    for (const section of sections) {
+      const cached = cachedData.get(section.keyword);
+      if (cached && this.isCacheValidWithCustomRetention(cached, section.cacheRetention)) {
+        results.push(cached);
+      } else {
+        uncachedSections.push(section);
+      }
+    }
+
+    if (uncachedSections.length > 0) {
+      try {
+        const uncachedKeywords = uncachedSections.map(s => s.keyword);
+        const freshData = await this.fetchFreshData(uncachedKeywords);
+        results.push(...freshData);
+        
+        // Cache with custom retention times
+        const cacheMap = new Map<string, TrendingData>();
+        const ttlMap = new Map<string, number>();
+        
+        freshData.forEach(data => {
+          cacheMap.set(data.keyword, data);
+          const section = sectionMap.get(data.keyword);
+          if (section?.cacheRetention) {
+            const ttlSeconds = this.calculateTtlSeconds(section.cacheRetention);
+            ttlMap.set(data.keyword, ttlSeconds);
+          }
+        });
+        
+        await this.cacheService.setMultiple(cacheMap, ttlMap);
+      } catch (error) {
+        console.error('Error fetching fresh data:', error);
+        
+        for (const section of uncachedSections) {
+          results.push(this.getFallbackData(section.keyword));
+        }
+      }
+    }
+
+    return results.sort((a, b) => keywords.indexOf(a.keyword) - keywords.indexOf(b.keyword));
+  }
+
+  private isCacheValidWithCustomRetention(data: TrendingData, cacheRetention?: { value: number; unit: 'hour' | 'day' }): boolean {
+    const now = new Date();
+    const cacheAge = now.getTime() - new Date(data.lastUpdated).getTime();
+    
+    let maxAge: number;
+    if (cacheRetention) {
+      maxAge = this.calculateTtlSeconds(cacheRetention) * 1000; // Convert to milliseconds
+    } else {
+      maxAge = APP_LIMITS.cacheDurationHours * 60 * 60 * 1000; // Default retention
+    }
+    
+    return cacheAge < maxAge;
+  }
+
+  private calculateTtlSeconds(cacheRetention: { value: number; unit: 'hour' | 'day' }): number {
+    const { value, unit } = cacheRetention;
+    
+    // Validate constraints: 1-168 hours or 1-7 days
+    if (unit === 'hour') {
+      const clampedValue = Math.max(1, Math.min(168, value));
+      return clampedValue * 3600; // Convert hours to seconds
+    } else {
+      const clampedValue = Math.max(1, Math.min(7, value));
+      return clampedValue * 24 * 3600; // Convert days to seconds
+    }
+  }
+
+  async refreshTopicsWithRetention(sections: SectionWithCacheRetention[]): Promise<TrendingData[]> {
+    if (sections.length === 0) {
+      return [];
+    }
+
+    if (sections.length > APP_LIMITS.maxKeywords) {
+      throw new Error(`Maximum ${APP_LIMITS.maxKeywords} sections allowed`);
+    }
+
+    try {
+      const keywords = sections.map(s => s.keyword);
+      const freshData = await this.fetchFreshData(keywords);
+      
+      // Cache with custom retention times
+      const cacheMap = new Map<string, TrendingData>();
+      const ttlMap = new Map<string, number>();
+      
+      // Create section lookup map
+      const sectionMap = new Map(sections.map(s => [s.keyword, s]));
+      
+      freshData.forEach(data => {
+        cacheMap.set(data.keyword, data);
+        const section = sectionMap.get(data.keyword);
+        if (section?.cacheRetention) {
+          const ttlSeconds = this.calculateTtlSeconds(section.cacheRetention);
+          ttlMap.set(data.keyword, ttlSeconds);
+        }
+      });
+      
+      await this.cacheService.setMultiple(cacheMap, ttlMap);
+      return freshData;
+    } catch (error) {
+      console.error('Error refreshing topics with retention:', error);
+      throw new Error('Failed to refresh trending topics');
+    }
   }
 
   async disconnect(): Promise<void> {

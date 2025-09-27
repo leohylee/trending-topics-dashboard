@@ -49,7 +49,8 @@ A real-time trending topics dashboard that provides **factual, current informati
 - **🌐 Real Web Search**: Uses OpenAI API with web search to get **actual current events**
 - **📊 Customizable Dashboard**: Drag-and-drop grid layout with resizable sections  
 - **🤖 AI-Powered Analysis**: Cost-effective `gpt-4o-mini` processing of real web search results
-- **⚡ Smart Caching**: Intelligent 2-hour cache with progressive loading
+- **⚡ Smart Caching**: Intelligent cache with **per-section retention settings** (1 hour - 7 days)
+- **⏱️ Flexible Cache Retention**: Set custom cache duration for each keyword section (hours or days)
 - **🌙 Dark Mode**: Toggle between light and dark themes with persistence
 - **📱 Responsive Design**: Works perfectly on mobile, tablet, and desktop
 - **🔒 Production Ready**: Structured logging, validation middleware, and error handling
@@ -209,18 +210,21 @@ The application now uses **gpt-4o-mini** by default for significant cost savings
 - **gpt-4-turbo**: High quality, higher cost
 - **gpt-4o**: Latest model, premium cost
 
-### Smart Caching
-- **2-hour cache duration** significantly reduces API calls
+### Smart Caching with Custom Retention
+- **Per-section cache retention** (1 hour to 7 days) for flexible data freshness control
 - **Progressive loading** shows cached data immediately
 - **Cache hit tracking** for monitoring effectiveness
 - **Selective cache clearing** for targeted updates
+- **Automatic TTL updates** when retention settings change during refresh
 
 ## 🔌 API Endpoints
 
 ### Core Endpoints
 - `GET /api/trending?keywords=tech,science` - Get trending topics (cache-first)
 - `GET /api/trending/cached?keywords=tech` - Progressive loading endpoint
+- `POST /api/trending/with-retention` - Get topics with custom cache retention per section
 - `POST /api/trending/refresh` - Force refresh with real web search (rate limited)
+- `POST /api/trending/refresh-with-retention` - Force refresh with custom cache retention
 - `GET /api/health` - Server health check with uptime
 
 ### 🗂️ Cache Management
@@ -274,16 +278,21 @@ The project includes comprehensive environment variable documentation with valid
 
 ### 📋 Dashboard Management
 1. **Add Sections**: Click "Add Section" to create keyword-based trending topic sections
-2. **Customize**: Configure max results (1-10) per section via settings
-3. **Arrange**: Drag and drop sections to organize your layout
-4. **Theme**: Toggle between light and dark modes
-5. **Progressive Loading**: See cached data instantly, fresh data loads in background
+2. **Customize**: Configure max results (1-10) and cache retention (1 hour - 7 days) per section
+3. **Cache Retention**: Set custom cache duration for each section:
+   - **Hours**: 1-168 hours (max 7 days)
+   - **Days**: 1-7 days
+   - **Smart validation**: Automatically prevents invalid combinations
+4. **Arrange**: Drag and drop sections to organize your layout
+5. **Theme**: Toggle between light and dark modes
+6. **Progressive Loading**: See cached data instantly, fresh data loads in background
 
 ### 🔄 Data Operations  
 1. **Smart Loading**: Cached data appears immediately, fresh data updates progressively
-2. **Manual Refresh**: Use header refresh button (rate-limited in production)
-3. **Cache Management**: Clear specific keywords or all cached data
-4. **Real-time Updates**: Background polling with intelligent cache invalidation
+2. **Manual Refresh**: Use header refresh button or individual section refresh (rate-limited in production)
+3. **Automatic TTL Updates**: When you change cache retention settings and refresh, the new TTL is applied immediately
+4. **Cache Management**: Clear specific keywords or all cached data
+5. **Real-time Updates**: Background polling with intelligent cache invalidation
 
 ## 🚀 Development
 

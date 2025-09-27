@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink, Loader2, Trash2, Settings, RefreshCw } from 'lucide-react';
 import { TrendingData, Section } from '../types';
 import { formatDistanceToNow } from 'date-fns';
@@ -26,6 +26,17 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
   onRefresh,
   isRefreshing
 }) => {
+  // Real-time timestamp updates
+  const [, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date()); // This forces re-render every minute
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   const handleTopicClick = (searchUrl: string) => {
     window.open(searchUrl, '_blank', 'noopener,noreferrer');
   };
@@ -121,23 +132,11 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
             </div>
             
             <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
-                <span className="flex items-center gap-1">
-                  {data.cached ? (
-                    <>
-                      <span className="text-green-500">⚡</span>
-                      <span>Cached data</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-blue-500">🌐</span>
-                      <span>Fresh from web</span>
-                    </>
-                  )}
-                </span>
-                <span>
-                  Updated {formatDistanceToNow(data.lastUpdated, { addSuffix: true })}
-                </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 text-right">
+                Updated {formatDistanceToNow(data.lastUpdated, { 
+                  addSuffix: true, 
+                  includeSeconds: false
+                })}
               </p>
             </div>
           </>
