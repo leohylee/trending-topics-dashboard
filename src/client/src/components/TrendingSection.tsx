@@ -108,7 +108,7 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
         {data && !isLoading && (
           <>
             <div className="space-y-3">
-              {data.topics.slice(0, section.maxResults).map((topic, index) => (
+              {data.topics.slice(0, section.maxResults).map((topic: any, index: number) => (
                 <div key={index} className="border-b border-gray-100 dark:border-gray-700 last:border-0 pb-3 last:pb-0">
                   <button
                     onClick={(e) => {

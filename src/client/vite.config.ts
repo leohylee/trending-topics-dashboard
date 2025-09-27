@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import baseConfig from '../config/base.json';
+import baseConfig from './src/config/base';
 
 export default defineConfig({
   plugins: [react()],
@@ -15,5 +15,6 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist'
-  }
+  },
+  assetsInclude: ['**/*.json']
 });

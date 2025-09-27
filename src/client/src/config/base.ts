@@ -1,0 +1,50 @@
+export const baseConfig = {
+  app: {
+    name: "Trending Topics Dashboard",
+    version: "1.0.0"
+  },
+  ports: {
+    server: 3002,
+    client: 3000
+  },
+  api: {
+    timeout: 30000,
+    baseUrl: "/api"
+  },
+  cors: {
+    origins: [
+      "http://localhost:3000",
+      "http://localhost:5173"
+    ]
+  },
+  limits: {
+    maxKeywords: 10,
+    manualRefreshLimit: 3,
+    cacheDurationHours: 2,
+    manualRefreshEnabled: false,
+    maxResultsPerKeyword: 10,
+    minResultsPerKeyword: 1
+  },
+  openai: {
+    model: "gpt-4o-mini",
+    temperature: 0.3,
+    maxTokens: 3000,
+    presencePenalty: 0.1,
+    frequencyPenalty: 0.1,
+    webSearch: {
+      enabled: true,
+      contextSize: "medium"
+    }
+  },
+  cache: {
+    redis: {
+      url: "redis://localhost:6379"
+    },
+    node: {
+      stdTTL: 7200,
+      checkPeriod: 600
+    }
+  }
+};
+
+export default baseConfig;

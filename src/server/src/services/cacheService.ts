@@ -23,14 +23,17 @@ export class CacheService {
   }
 
   private async initializeRedis() {
-    if (config.nodeEnv === 'production') {
+    // Skip Redis in Lambda environment (AWS Lambda doesn't have Redis server)
+    const isLambda = !!process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+    if (config.nodeEnv === 'production' && !isLambda) {
       try {
         this.redisClient = createClient({ url: config.redisUrl });
         this.redisClient.on('error', (err) => {
           console.warn('Redis Client Error:', err);
           this.useRedis = false;
         });
-        
+
         await this.redisClient.connect();
         this.useRedis = true;
         console.log('Connected to Redis');
@@ -38,6 +41,8 @@ export class CacheService {
         console.warn('Failed to connect to Redis, using node-cache:', error);
         this.useRedis = false;
       }
+    } else if (isLambda) {
+      console.log('Lambda environment detected, using DynamoDB cache instead of Redis');
     }
   }
 

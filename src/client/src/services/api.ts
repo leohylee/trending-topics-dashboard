@@ -1,6 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest, CachedTrendingResponse, Section } from '../types';
-import { transformDatesInResponse, handleApiError } from '../../../shared/utils/api';
+import { TrendingData, ApiResponse, Section } from '../types';
 import { API_CONFIG } from '../config';
 
 // Create axios instance with configuration from centralized config
@@ -35,81 +34,62 @@ api.interceptors.response.use(
     return response;
   },
   (error: AxiosError) => {
-    const apiError = handleApiError(error);
     if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.error('API Response Error:', apiError.message);
+      console.error('API Response Error:', error.message);
     }
-    return Promise.reject(apiError);
+    return Promise.reject(error);
   }
 );
 
 // Helper function to process API response data
 function processResponseData<T>(data: T): T {
-  return transformDatesInResponse(data) as T;
+  // Simple passthrough since we don't have date transformation
+  return data;
 }
 
 export const trendingApi = {
-  // Removed unused legacy API methods: getTrending, getCachedTrending, refreshTrending, refreshSingleKeyword
-  // These were replaced by cache retention API methods
-
   async getTrendingWithRetention(sections: Section[]): Promise<TrendingData[]> {
-    const payload = {
-      sections: sections.map(section => ({
-        keyword: section.keyword,
-        maxResults: section.maxResults,
-        cacheRetention: section.cacheRetention
-      }))
-    };
-    
-    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/with-retention', payload);
-    
+    // Use the basic trending endpoint since cache retention endpoints aren't deployed
+    const keywords = sections.map(section => section.keyword);
+    const response = await api.get<ApiResponse<TrendingData[]>>('/trending', {
+      params: { keywords: keywords.join(',') }
+    });
+
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to fetch trending topics with retention');
+      throw new Error(response.data.error || 'Failed to fetch trending topics');
     }
-    
+
     return processResponseData(response.data.data!);
   },
 
   async refreshTrendingWithRetention(sections: Section[]): Promise<TrendingData[]> {
-    const payload = {
-      sections: sections.map(section => ({
-        keyword: section.keyword,
-        maxResults: section.maxResults,
-        cacheRetention: section.cacheRetention
-      }))
-    };
-    
-    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh-with-retention', payload);
-    
+    // Use the basic refresh endpoint since cache retention endpoints aren't deployed
+    const keywords = sections.map(section => section.keyword);
+    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh', {
+      keywords: keywords
+    });
+
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to refresh trending topics with retention');
+      throw new Error(response.data.error || 'Failed to refresh trending topics');
     }
-    
+
     return processResponseData(response.data.data!);
   },
 
   async refreshSingleSectionWithRetention(section: Section): Promise<TrendingData> {
-    const payload = {
-      sections: [{
-        keyword: section.keyword,
-        maxResults: section.maxResults,
-        cacheRetention: section.cacheRetention
-      }]
-    };
-    
-    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh-with-retention', payload);
-    
+    // Use the basic refresh endpoint for single section
+    const response = await api.post<ApiResponse<TrendingData[]>>('/trending/refresh', {
+      keywords: [section.keyword]
+    });
+
     if (!response.data.success) {
-      throw new Error(response.data.error || 'Failed to refresh trending topic with retention');
+      throw new Error(response.data.error || 'Failed to refresh section');
     }
-    
+
     const result = response.data.data![0];
     return processResponseData(result);
   }
 };
-
-// Export shared utilities for use in components
-export { handleApiError } from '../../shared/utils/api';
 
 // Export axios instance for advanced usage
 export { api };

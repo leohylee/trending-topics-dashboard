@@ -117,9 +117,9 @@ create_lambda_function() {
         --role "arn:aws:iam::$AWS_ACCOUNT_ID:role/$ROLE_NAME" \
         --handler "$handler_file.handler" \
         --zip-file "fileb://$LAMBDA_BUILD_DIR/$DEPLOYMENT_PACKAGE" \
-        --timeout 60 \
-        --memory-size 512 \
-        --environment "Variables={OPENAI_API_KEY=$OPENAI_API_KEY,OPENAI_MODEL=gpt-4-turbo,NODE_ENV=production,DYNAMODB_TABLE_NAME=TrendingCache,OPENAI_WEB_SEARCH_ENABLED=true,OPENAI_TEMPERATURE=0.3,OPENAI_MAX_TOKENS=3000}" > /dev/null
+        --timeout 25 \
+        --memory-size 1024 \
+        --environment "Variables={OPENAI_API_KEY=$OPENAI_API_KEY,OPENAI_MODEL=gpt-4o-mini,NODE_ENV=production,DYNAMODB_TABLE_NAME=TrendingCache,OPENAI_WEB_SEARCH_ENABLED=true,OPENAI_TEMPERATURE=0.3,OPENAI_MAX_TOKENS=3000}" > /dev/null
     
     print_success "Function $func_name created"
 }
@@ -141,9 +141,9 @@ update_lambda_function() {
     print_status "Updating function configuration: $func_name"
     aws lambda update-function-configuration \
         --function-name "$func_name" \
-        --timeout 60 \
-        --memory-size 512 \
-        --environment "Variables={OPENAI_API_KEY=$OPENAI_API_KEY,OPENAI_MODEL=gpt-4-turbo,NODE_ENV=production,DYNAMODB_TABLE_NAME=TrendingCache,OPENAI_WEB_SEARCH_ENABLED=true,OPENAI_TEMPERATURE=0.3,OPENAI_MAX_TOKENS=3000}" > /dev/null
+        --timeout 25 \
+        --memory-size 1024 \
+        --environment "Variables={OPENAI_API_KEY=$OPENAI_API_KEY,OPENAI_MODEL=gpt-4o-mini,NODE_ENV=production,DYNAMODB_TABLE_NAME=TrendingCache,OPENAI_WEB_SEARCH_ENABLED=true,OPENAI_TEMPERATURE=0.3,OPENAI_MAX_TOKENS=3000}" > /dev/null
     
     print_success "Function $func_name updated"
 }
@@ -162,8 +162,8 @@ print_status "Deployment Summary:"
 echo "  • Source: src/server (Express controllers → Lambda handlers)"
 echo "  • Functions deployed: ${#FUNCTIONS[@]}"
 echo "  • Runtime: Node.js 18.x"
-echo "  • Memory: 512 MB"
-echo "  • Timeout: 60 seconds"
+echo "  • Memory: 1024 MB (optimized for performance)"
+echo "  • Timeout: 25 seconds (under API Gateway limit)"
 echo ""
 print_status "Environment Variables Set:"
 echo "  • OPENAI_MODEL: gpt-4o-mini"
@@ -171,7 +171,7 @@ echo "  • NODE_ENV: production"
 echo "  • DYNAMODB_TABLE_NAME: TrendingCache"
 echo "  • OPENAI_WEB_SEARCH_ENABLED: true"
 echo "  • OPENAI_TEMPERATURE: 0.3"
-echo "  • OPENAI_MAX_TOKENS: 4000"
+echo "  • OPENAI_MAX_TOKENS: 3000"
 echo ""
 print_success "✅ Lambda functions are now in sync with src/server!"
 echo ""

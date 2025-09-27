@@ -49,19 +49,21 @@ export class OpenAIService {
   private async getWebSearchTrendingTopics(keyword: string, maxResults: number): Promise<KeywordTopics> {
     console.log(`🔍 Using OpenAI Responses API with web search for: ${keyword}`);
     
-    const searchInput = `You are a news aggregator. Search the web for the latest news about "${keyword}" and return ONLY a JSON array with ${maxResults} recent news items.
+    const searchInput = `Search web for ${maxResults} MOST RECENT and LATEST breaking news about "${keyword}" from TODAY or the past 24-48 hours. Focus on current events, breaking news, and trending developments.
 
-CRITICAL: Your response must be ONLY the JSON array below. No explanations, no text before or after, no markdown, no code blocks.
+CRITICAL REQUIREMENTS:
+- ONLY search for NEWS from the last 24-48 hours
+- Prioritize TODAY'S news and breaking stories
+- Return ONLY this exact JSON format: [{"title":"Latest news headline","summary":"Current event summary"}]
+- NO explanations, NO text, NO markdown - ONLY the JSON array
+- If no recent news found for "${keyword}", return: []
 
-Format exactly like this:
-[{"title":"News headline here","summary":"Brief summary of what happened"}]
-
-Search for "${keyword}" news from the last 24-48 hours and return the JSON array:`;
+Search for TODAY'S latest "${keyword}" news:`;
 
     try {
       // Use the Responses API with web search tool
-      // Web search requires gpt-4o or gpt-4o-mini
-      const webSearchModel = config.openai.model.includes('gpt-4o') ? config.openai.model : 'gpt-4o-mini';
+      // Web search is supported by gpt-4o, gpt-4o-mini, and gpt-4.1 series
+      const webSearchModel = config.openai.model;
       
       const response = await (this.openai as any).responses.create({
         model: webSearchModel,
@@ -150,10 +152,16 @@ Search for "${keyword}" news from the last 24-48 hours and return the JSON array
             jsonString = jsonString.replace(/"\s*:\s*"/g, '":"');    // Fix spacing around colons
             jsonString = jsonString.trim();
             
-            // Attempt to repair truncated JSON
-            if (jsonString.endsWith('"') && !jsonString.endsWith('"}') && !jsonString.endsWith('"]')) {
-              // Likely truncated in middle of string - try to close it
-              console.log('🔧 Attempting to repair truncated JSON string...');
+            // Enhanced truncation detection and repair
+            const isTruncated = (
+              jsonString.endsWith('"') && !jsonString.endsWith('"}') && !jsonString.endsWith('"]') ||
+              jsonString.includes('{"title"') && !jsonString.trim().endsWith(']') ||
+              jsonString.match(/\{\s*"title".*"summary".*[^}]$/) || // Ends without closing brace
+              (jsonString.match(/\{/g) || []).length > (jsonString.match(/\}/g) || []).length // More opens than closes
+            );
+
+            if (isTruncated) {
+              console.log('🔧 Detected truncated JSON, attempting repair...');
               jsonString = this.repairTruncatedJson(jsonString);
             }
             
@@ -316,40 +324,61 @@ Search for "${keyword}" news from the last 24-48 hours and return the JSON array
 
   private repairTruncatedJson(jsonString: string): string {
     try {
-      // Common patterns for truncated JSON
-      if (jsonString.includes('"title":') && jsonString.includes('"summary":')) {
-        // Try to identify incomplete objects and close them
-        const lastOpenBrace = jsonString.lastIndexOf('{');
-        const lastCloseBrace = jsonString.lastIndexOf('}');
-        
-        if (lastOpenBrace > lastCloseBrace) {
-          // There's an unclosed object
-          const beforeIncomplete = jsonString.substring(0, lastOpenBrace);
-          
-          // Check if we have at least one complete object before this
-          if (beforeIncomplete.includes('"title":') && beforeIncomplete.includes('"summary":')) {
-            console.log('🔧 Found complete objects before truncation, removing incomplete part');
-            // Remove the incomplete object and close the array
-            let repaired = beforeIncomplete.trim();
-            if (repaired.endsWith(',')) {
-              repaired = repaired.slice(0, -1); // Remove trailing comma
+      console.log('🔧 Attempting to repair truncated JSON...');
+
+      // Extract complete objects using more flexible regex patterns
+      const completeObjects: any[] = [];
+
+      // Enhanced patterns to match objects with possible additional fields
+      const patterns = [
+        // Standard pattern with title and summary
+        /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"summary"\s*:\s*"([^"]+)"\s*(?:,\s*"[^"]*"\s*:\s*"[^"]*")*\s*\}/g,
+        // Pattern for objects with URL field
+        /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"summary"\s*:\s*"([^"]+)"\s*,\s*"url"\s*:\s*"[^"]+"\s*(?:,\s*"[^"]*"\s*:\s*"[^"]*")*\s*\}/g,
+        // Pattern for objects with image_query field
+        /\{\s*"title"\s*:\s*"([^"]+)"\s*,\s*"summary"\s*:\s*"([^"]+)"\s*,\s*"url"\s*:\s*"[^"]+"\s*,\s*"image_query"\s*:\s*"[^"]+"\s*\}/g
+      ];
+
+      for (const pattern of patterns) {
+        let match: RegExpExecArray | null;
+        while ((match = pattern.exec(jsonString)) !== null && completeObjects.length < 10) {
+          if (match[1] && match[2] && match[1].length > 3 && match[2].length > 10) {
+            // Check if this title is already added to avoid duplicates
+            const isDuplicate = completeObjects.some(obj => obj.title === match![1].trim());
+            if (!isDuplicate) {
+              completeObjects.push({
+                title: match[1].trim(),
+                summary: match[2].trim()
+              });
             }
-            if (!repaired.endsWith(']')) {
-              repaired += ']';
-            }
-            return repaired;
           }
         }
-        
-        // If we have an unterminated string, try to close it intelligently
-        if (jsonString.match(/"summary":\s*"[^"]*$/)) {
-          console.log('🔧 Attempting to close unterminated summary string');
-          // Try to close the unterminated string and object
-          let repaired = jsonString + '"}]';
-          return repaired;
+      }
+
+      if (completeObjects.length > 0) {
+        console.log(`🔧 Extracted ${completeObjects.length} complete objects from truncated JSON`);
+        return JSON.stringify(completeObjects);
+      }
+
+      // Fallback: try to close truncated structure
+      if (jsonString.includes('"title":') && jsonString.includes('"summary":')) {
+        // Find the last complete object and truncate everything after it
+        const lastCompleteObjectEnd = jsonString.lastIndexOf('}');
+        if (lastCompleteObjectEnd > -1) {
+          // Extract everything up to the last complete object
+          let truncatedToLastObject = jsonString.substring(0, lastCompleteObjectEnd + 1);
+
+          // If it doesn't end with ] and we're in an array, add it
+          if (!truncatedToLastObject.trim().endsWith(']') && truncatedToLastObject.includes('[')) {
+            // Remove any trailing comma and close the array
+            truncatedToLastObject = truncatedToLastObject.replace(/,\s*$/, '') + ']';
+          }
+
+          console.log('🔧 Truncated to last complete object and closed JSON');
+          return truncatedToLastObject;
         }
       }
-      
+
       // If all else fails, return as-is
       return jsonString;
     } catch (error) {
