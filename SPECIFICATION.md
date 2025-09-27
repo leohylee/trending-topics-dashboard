@@ -798,9 +798,16 @@ The application is now **production-ready** with:
 - ✅ Structured logging and monitoring
 - ✅ Clean, maintainable codebase architecture
 
+## 📚 Related Documentation
+
+- **[Main README](/README.md)** - Project overview, quick start, and features
+- **[Development Guide](/DEVELOPMENT.md)** - Development workflow and implementation details
+- **[Configuration Guide](/config/README.md)** - Configuration system and environment setup
+- **[Deployment Guide](/deployment/README.md)** - AWS deployment and production setup
+
 ---
 
-**Document Version**: 2.1.0  
-**Last Updated**: September 1, 2025  
-**Status**: ✅ Production Ready with Advanced Cache Management 
-**Latest Addition**: Per-Section Cache Retention Feature (1h-7d) with Dynamic TTL Updates
+**Document Version**: 3.1.0
+**Last Updated**: September 27, 2025
+**Status**: ✅ Production Ready with AWS Deployment and Advanced Features
+**Latest Additions**: AWS Serverless Deployment + Per-Section Cache Retention (1h-7d) + Consolidated Documentation

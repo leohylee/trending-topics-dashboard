@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { TrendingData, ApiResponse, Section } from '../types';
+import { TrendingData, ApiResponse, HealthResponse, CacheStatsResponse, CacheInfoResponse, RefreshRequest, CachedTrendingResponse, Section } from '../types';
 import { transformDatesInResponse, handleApiError } from '../../../shared/utils/api';
 import { API_CONFIG } from '../config';
 
@@ -109,7 +109,7 @@ export const trendingApi = {
 };
 
 // Export shared utilities for use in components
-export { handleApiError } from '../../../shared/utils/api';
+export { handleApiError } from '../../shared/utils/api';
 
 // Export axios instance for advanced usage
 export { api };

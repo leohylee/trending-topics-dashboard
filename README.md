@@ -1,5 +1,47 @@
 # Trending Topics Dashboard
 
+A React + Node.js application that provides real-time trending topics using OpenAI's web search capabilities, deployed as a serverless AWS application.
+
+## 🏗️ Project Structure
+
+```
+trending-topics-dashboard/
+├── src/
+│   ├── client/              # React frontend (Vite + TypeScript)
+│   │   ├── src/
+│   │   │   ├── components/  # React components
+│   │   │   ├── hooks/       # Custom React hooks
+│   │   │   ├── services/    # API services
+│   │   │   ├── types/       # TypeScript type definitions
+│   │   │   └── config/      # Frontend configuration
+│   │   ├── public/          # Static assets
+│   │   └── package.json
+│   │
+│   ├── server/              # Node.js backend (Express + TypeScript)
+│   │   ├── src/
+│   │   │   ├── services/    # Business logic services
+│   │   │   ├── routes/      # API routes
+│   │   │   ├── middleware/  # Express middleware
+│   │   │   └── config/      # Server configuration
+│   │   └── package.json
+│   │
+│   └── shared/              # Shared code between client & server
+│       ├── types/           # TypeScript interfaces
+│       ├── utils/           # Utility functions
+│       └── config/          # Shared configuration
+│
+├── deployment/              # AWS deployment configuration
+│   ├── lambda/              # Lambda function code
+│   ├── scripts/             # Deployment scripts
+│   ├── config/              # CloudFront & AWS config
+│   └── docs/                # Deployment documentation
+│
+├── config/                  # Environment configurations
+│   └── base.json           # Base application config
+│
+└── docs/                   # Project documentation
+```
+
 A real-time trending topics dashboard that provides **factual, current information** from the internet using OpenAI's advanced web search capabilities with cost-effective `gpt-4o-mini`.
 
 ## 🌟 Key Features
@@ -309,19 +351,24 @@ curl http://localhost:3000/api/health  # Client proxy test
 
 ## 📚 Documentation
 
-- **Configuration Guide**: `/config/README.md`
-- **API Documentation**: See API Endpoints section above
-- **Architecture Overview**: See Project Architecture section
-- **Environment Setup**: See Environment Variables section
+- **[Technical Specification](/SPECIFICATION.md)** - Comprehensive technical details and architecture
+- **[Development Guide](/DEVELOPMENT.md)** - Development workflow, implementation notes, and future enhancements  
+- **[Configuration Guide](/config/README.md)** - Configuration system and environment variables
+- **[Deployment Guide](/deployment/README.md)** - AWS deployment process and production setup
 
 ## 🎯 Production Deployment
 
-1. **Environment Setup**: Configure all required environment variables
-2. **Build Applications**: Run `npm run build` in both server and client
-3. **Redis Setup**: Configure Redis for production caching
-4. **Rate Limiting**: Enable `manualRefreshEnabled: true` in production
-5. **Monitoring**: Use structured logging and health check endpoints
-6. **Reverse Proxy**: Configure nginx/Apache for client + server routing
+For detailed deployment instructions, see **[Deployment Guide](/deployment/README.md)**.
+
+**Quick deployment**:
+```bash
+cd deployment/scripts
+./setup-infrastructure.sh    # Set up AWS resources
+./build-and-deploy.sh        # Deploy backend from src/server
+./deploy-frontend.sh         # Deploy React frontend
+```
+
+**Live deployment**: https://trends.leohyl.me
 
 ---
 

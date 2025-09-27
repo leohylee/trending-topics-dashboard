@@ -1,7 +1,28 @@
 import dotenv from 'dotenv';
-import baseConfig from '../../../config/base.json';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 dotenv.config();
+
+// Load base config with runtime path resolution
+const getBaseConfig = () => {
+  // Try Lambda environment path first (from /var/task/dist/config to /var/task/config)
+  const lambdaConfigPath = join(__dirname, '../../config/base.json');
+  // Fallback to development environment path
+  const devConfigPath = join(__dirname, '../../../../config/base.json');
+  
+  try {
+    return JSON.parse(readFileSync(lambdaConfigPath, 'utf8'));
+  } catch {
+    try {
+      return JSON.parse(readFileSync(devConfigPath, 'utf8'));
+    } catch (error) {
+      throw new Error(`Cannot find base.json config file. Tried: ${lambdaConfigPath}, ${devConfigPath}`);
+    }
+  }
+};
+
+const baseConfig = getBaseConfig();
 
 // Server configuration combining base config with environment variables
 export const config = {

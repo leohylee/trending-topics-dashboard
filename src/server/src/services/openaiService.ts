@@ -49,36 +49,30 @@ export class OpenAIService {
   private async getWebSearchTrendingTopics(keyword: string, maxResults: number): Promise<KeywordTopics> {
     console.log(`🔍 Using OpenAI Responses API with web search for: ${keyword}`);
     
-    const searchInput = `Find ${maxResults} LATEST "${keyword}" news from TODAY/YESTERDAY. Search web for breaking news, live scores, transfers, matches happening now.
+    const searchInput = `You are a news aggregator. Search the web for the latest news about "${keyword}" and return ONLY a JSON array with ${maxResults} recent news items.
 
-RETURN ONLY JSON ARRAY - NO OTHER TEXT:
-[{"title":"headline","summary":"what happened today/yesterday"}]
+CRITICAL: Your response must be ONLY the JSON array below. No explanations, no text before or after, no markdown, no code blocks.
 
-Requirements:
-- TODAY'S events first priority
-- Recent matches/scores/transfers only
-- Include specific dates when available
-- NO explanatory text
-- NO formatting
-- NO markdown
-- ONLY the JSON array
+Format exactly like this:
+[{"title":"News headline here","summary":"Brief summary of what happened"}]
 
-JSON ARRAY:`;
+Search for "${keyword}" news from the last 24-48 hours and return the JSON array:`;
 
     try {
-      // Use the new Responses API with web search tool
-      // Web search requires gpt-4o or gpt-4o-mini, not gpt-4-turbo
-      const webSearchModel = config.openai.model.includes('gpt-4o') ? config.openai.model : 'gpt-4o';
+      // Use the Responses API with web search tool
+      // Web search requires gpt-4o or gpt-4o-mini
+      const webSearchModel = config.openai.model.includes('gpt-4o') ? config.openai.model : 'gpt-4o-mini';
       
       const response = await (this.openai as any).responses.create({
         model: webSearchModel,
         input: searchInput,
         tools: [
           {
-            type: "web_search_preview" // Correct tool type from error message
+            type: "web_search_preview"
           }
         ]
       });
+
 
       let content: string;
       if (response.output_text) {
@@ -89,26 +83,29 @@ JSON ARRAY:`;
         throw new Error('No content received from OpenAI Responses API');
       }
 
-      // Debug response length and truncation
       console.log(`📏 Response length: ${content.length} characters`);
-      if (content.length > 500) {
-        console.log(`📝 Response preview: ${content.substring(0, 200)}...${content.substring(content.length - 100)}`);
+      if (content.length > 0) {
+        console.log(`🔍 Response preview (first 300 chars): ${content.substring(0, 300)}`);
+        console.log(`🔍 Response end (last 100 chars): ${content.substring(Math.max(0, content.length - 100))}`);
       }
-
+      
       const topics = this.parseWebSearchResponse(content, keyword);
       console.log(`✅ Web search completed for keyword: ${keyword} - found ${topics.length} real trending topics`);
-      return { keyword, topics };
+      
+      return {
+        keyword,
+        topics,
+      };
 
     } catch (error: any) {
       console.error(`❌ Responses API error for "${keyword}":`, error.message);
       
-      // If Responses API fails, fall back to regular chat completions with a disclaimer
-      console.log(`⚠️ Falling back to chat completions for: ${keyword}`);
+      // Return fallback message indicating web search failed
       return {
         keyword,
         topics: [{
-          title: `Responses API Unavailable for "${keyword}"`,
-          summary: `The OpenAI Responses API with web search is not available in this configuration. This may be because: 1) The feature requires access to newer OpenAI API endpoints, 2) Additional API permissions are needed, or 3) The feature is in preview/beta. To get real trending topics, consider using external search APIs like NewsAPI or Google Custom Search.`,
+          title: `Web Search Unavailable for "${keyword}"`,
+          summary: `Real-time web search is temporarily unavailable. This may be due to API limitations or configuration issues. The OpenAI Responses API with web search returned: ${error.message}`,
           searchUrl: `https://www.google.com/search?q=${encodeURIComponent(keyword + ' trending news')}`
         }]
       };
@@ -120,16 +117,22 @@ JSON ARRAY:`;
 
 
 
+
   private parseWebSearchResponse(content: string, keyword: string): TrendingTopic[] {
     try {
-      console.log(`🔍 Raw web search response preview: ${content.substring(0, 200)}...`);
+      console.log(`🔍 Parsing web search response for keyword: ${keyword}`);
+      console.log(`🔍 Content length: ${content.length} characters`);
+      console.log(`🔍 First 200 chars: ${content.substring(0, 200)}`);
       
-      // More aggressive JSON extraction - look for multiple patterns
+      // More comprehensive JSON extraction patterns
       const jsonPatterns = [
-        /\[[\s\S]*?\]/,                    // Standard array
+        /\[[\s\S]*?\]/,                    // Standard array anywhere
         /```json\s*(\[[\s\S]*?\])\s*```/, // JSON in code blocks
         /```\s*(\[[\s\S]*?\])\s*```/,     // Arrays in code blocks
-        /(\[[\s\S]*?\])/                  // Any array-like structure
+        /(\[[\s\S]*?\])/,                  // Any array-like structure
+        /JSON ARRAY:\s*(\[[\s\S]*?\])/,   // After "JSON ARRAY:" prompt
+        /Here are.*?(\[[\s\S]*?\])/i,     // After "Here are" text
+        /topics.*?(\[[\s\S]*?\])/i        // After "topics" text
       ];
 
       for (const pattern of jsonPatterns) {
