@@ -13,6 +13,7 @@ interface TrendingSectionProps {
   onSettings: (section: Section) => void;
   onRefresh?: (keyword: string) => void;
   isRefreshing?: boolean;
+  isMobileCarousel?: boolean;
 }
 
 export const TrendingSection: React.FC<TrendingSectionProps> = ({
@@ -24,7 +25,8 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
   onRemove,
   onSettings,
   onRefresh,
-  isRefreshing
+  isRefreshing,
+  isMobileCarousel = false
 }) => {
   // Real-time timestamp updates
   const [, setCurrentTime] = useState(new Date());
@@ -42,25 +44,70 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 h-full flex flex-col transition-colors">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
-        <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{section.keyword}</h2>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 h-full flex flex-col transition-colors ${isMobileCarousel ? 'border-0 shadow-none' : ''}`}>
+      {!isMobileCarousel && (
+        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-2">
+            <h2 className="font-semibold text-lg text-gray-900 dark:text-white">{section.keyword}</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {onRefresh && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRefresh(section.keyword);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                onTouchStart={(e) => e.stopPropagation()}
+                disabled={isRefreshing}
+                className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50"
+                title={isRefreshing ? 'Refreshing...' : (isProgressiveLoading ? 'Loading fresh data...' : 'Refresh this section')}
+              >
+                <RefreshCw size={16} className={(isRefreshing || isProgressiveLoading) ? 'animate-spin' : ''} />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSettings(section);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+              title="Settings"
+            >
+              <Settings size={16} />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(section.id);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
+              className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+              title="Remove section"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+      )}
+      
+      {/* Mobile carousel floating actions */}
+      {isMobileCarousel && (
+        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
           {onRefresh && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRefresh(section.keyword);
               }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onTouchStart={(e) => e.stopPropagation()}
               disabled={isRefreshing}
-              className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors disabled:opacity-50"
-              title={isRefreshing ? 'Refreshing...' : (isProgressiveLoading ? 'Loading fresh data...' : 'Refresh this section')}
+              className="p-2 bg-white dark:bg-gray-800 text-blue-500 hover:text-blue-700 shadow-md rounded-full border border-gray-200 dark:border-gray-600 transition-colors disabled:opacity-50"
+              title={isRefreshing ? 'Refreshing...' : 'Refresh this section'}
             >
-              <RefreshCw size={16} className={(isRefreshing || isProgressiveLoading) ? 'animate-spin' : ''} />
+              <RefreshCw size={18} className={(isRefreshing || isProgressiveLoading) ? 'animate-spin' : ''} />
             </button>
           )}
           <button
@@ -68,29 +115,22 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
               e.stopPropagation();
               onSettings(section);
             }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+            className="p-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shadow-md rounded-full border border-gray-200 dark:border-gray-600 transition-colors"
             title="Settings"
           >
-            <Settings size={16} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(section.id);
-            }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
-            className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-            title="Remove section"
-          >
-            <Trash2 size={16} />
+            <Settings size={18} />
           </button>
         </div>
-      </div>
-      
-      <div className="flex-1 p-4 overflow-y-auto">
+      )}
+
+      <div
+        className={`flex-1 overflow-y-auto ${isMobileCarousel ? 'p-4 pt-16' : 'p-4'}`}
+        style={isMobileCarousel ? {
+          touchAction: 'pan-y',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch'
+        } : { touchAction: 'pan-y' }}
+      >
         {isLoading && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
