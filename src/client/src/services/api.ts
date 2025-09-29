@@ -59,7 +59,7 @@ export const trendingApi = {
       throw new Error(response.data.error || 'Failed to fetch trending topics');
     }
 
-    return processResponseData(response.data.data!);
+    return processResponseData(response.data.data || []);
   },
 
   async refreshTrendingWithRetention(sections: Section[]): Promise<TrendingData[]> {
@@ -73,7 +73,7 @@ export const trendingApi = {
       throw new Error(response.data.error || 'Failed to refresh trending topics');
     }
 
-    return processResponseData(response.data.data!);
+    return processResponseData(response.data.data || []);
   },
 
   async refreshSingleSectionWithRetention(section: Section): Promise<TrendingData> {
@@ -86,7 +86,10 @@ export const trendingApi = {
       throw new Error(response.data.error || 'Failed to refresh section');
     }
 
-    const result = response.data.data![0];
+    const result = response.data.data?.[0];
+    if (!result) {
+      throw new Error('No data returned for section');
+    }
     return processResponseData(result);
   }
 };

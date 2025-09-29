@@ -11,9 +11,9 @@ import { TrendingData, Section } from '../types';
 // Trending hook with cache retention support
 export const useTrendingWithRetention = (sections: Section[]) => {
   return useQuery({
-    queryKey: ['trending-with-retention', sections.map(s => ({ keyword: s.keyword, retention: s.cacheRetention }))],
+    queryKey: ['trending-with-retention', sections?.map?.(s => ({ keyword: s.keyword, retention: s.cacheRetention })) || []],
     queryFn: () => trendingApi.getTrendingWithRetention(sections),
-    enabled: sections.length > 0,
+    enabled: sections && Array.isArray(sections) && sections.length > 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
@@ -53,8 +53,8 @@ export const useRefreshSingleSectionWithRetention = () => {
       queryClient.setQueriesData(
         { queryKey: ['trending-with-retention'] },
         (oldData: TrendingData[]) => {
-          if (!oldData) return oldData;
-          
+          if (!oldData || !Array.isArray(oldData)) return oldData;
+
           return oldData.map((item: TrendingData) =>
             item.keyword === section.keyword ? newData : item
           );
@@ -63,7 +63,12 @@ export const useRefreshSingleSectionWithRetention = () => {
 
       // Update individual section query
       queryClient.setQueryData(
-        ['trending-section', section.keyword, section.cacheRetention],
+        [
+          'trending-section',
+          section.keyword,
+          section.cacheRetention?.value || 1,
+          section.cacheRetention?.unit || 'hour'
+        ],
         newData
       );
 
@@ -86,9 +91,30 @@ export const useRefreshSingleSectionWithRetention = () => {
 
 // Individual section hook for progressive loading
 export const useTrendingSectionWithRetention = (section: Section) => {
+  // Safety check
+  if (!section || !section.keyword) {
+    return {
+      data: undefined,
+      isLoading: false,
+      error: new Error('Invalid section provided'),
+      isError: true,
+    };
+  }
+
   return useQuery({
-    queryKey: ['trending-section', section.keyword, section.cacheRetention],
-    queryFn: () => trendingApi.getTrendingWithRetention([section]).then(data => data[0]),
+    queryKey: [
+      'trending-section',
+      section.keyword,
+      section.cacheRetention?.value || 1,
+      section.cacheRetention?.unit || 'hour'
+    ],
+    queryFn: async () => {
+      const data = await trendingApi.getTrendingWithRetention([section]);
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        return undefined;
+      }
+      return data[0];
+    },
     enabled: true,
     staleTime: 1000 * 60 * 5, // 5 minutes
     retry: 3,
@@ -97,6 +123,11 @@ export const useTrendingSectionWithRetention = (section: Section) => {
 
 // Progressive loading hook that manages individual sections
 export const useProgressiveTrendingWithRetention = (sections: Section[]) => {
+  // Safety check: ensure sections is a valid array
+  if (!sections || !Array.isArray(sections)) {
+    return [];
+  }
+
   return sections.map(section => ({
     section,
     ...useTrendingSectionWithRetention(section)

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
 import { Section } from '../types';
@@ -21,6 +21,27 @@ export const MobileSectionCarousel: React.FC<MobileSectionCarouselProps> = ({
   refreshSingleMutation
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-adjust currentIndex when sections change
+  useEffect(() => {
+    // Safety check: ensure sections is defined and is an array
+    if (!sections || !Array.isArray(sections)) {
+      setCurrentIndex(0);
+      return;
+    }
+
+    if (sections.length === 0) {
+      setCurrentIndex(0);
+    } else {
+      // Use functional update to avoid needing currentIndex in dependencies
+      setCurrentIndex(prevIndex => {
+        if (prevIndex >= sections.length) {
+          return Math.max(0, sections.length - 1);
+        }
+        return prevIndex;
+      });
+    }
+  }, [sections?.length]);
   const containerRef = useRef<HTMLDivElement>(null);
   const startX = useRef<number>(0);
   const currentX = useRef<number>(0);
@@ -75,11 +96,17 @@ export const MobileSectionCarousel: React.FC<MobileSectionCarouselProps> = ({
     setCurrentIndex(index);
   };
 
-  if (sections.length === 0) {
+  // Safety checks
+  if (!sections || !Array.isArray(sections) || sections.length === 0) {
     return null;
   }
 
   const currentSection = sections[currentIndex];
+
+  // Safety check: if currentSection is undefined, don't render
+  if (!currentSection) {
+    return null;
+  }
 
   return (
     <div
@@ -89,53 +116,54 @@ export const MobileSectionCarousel: React.FC<MobileSectionCarouselProps> = ({
         WebkitOverflowScrolling: 'touch'
       }}
     >
-      {/* Section indicators */}
-      <div className="flex justify-center mb-3 gap-2 pt-2">
-        {sections.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSection(index)}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              index === currentIndex
-                ? 'bg-blue-500'
-                : 'bg-gray-300 dark:bg-gray-600'
-            }`}
-            aria-label={`Go to section ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      {/* Navigation buttons */}
-      {sections.length > 1 && (
-        <>
+      {/* Compact header with title and indicators */}
+      <div className="flex items-center justify-between px-4 py-2 mb-2">
+        {/* Navigation button - Left */}
+        {sections.length > 1 && (
           <button
             onClick={goToPrevious}
             disabled={currentIndex === 0}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Previous section"
           >
-            <ChevronLeft size={20} className="text-gray-600 dark:text-gray-300" />
+            <ChevronLeft size={16} className="text-gray-600 dark:text-gray-300" />
           </button>
+        )}
+        {sections.length <= 1 && <div className="w-8" />}
 
+        {/* Center: Title and indicators */}
+        <div className="flex flex-col items-center flex-1 mx-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white truncate max-w-full">
+            {currentSection.keyword}
+          </h2>
+          <div className="flex gap-1.5 mt-1">
+            {sections.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSection(index)}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  index === currentIndex
+                    ? 'bg-blue-500'
+                    : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+                aria-label={`Go to section ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation button - Right */}
+        {sections.length > 1 && (
           <button
             onClick={goToNext}
             disabled={currentIndex === sections.length - 1}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1.5 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
             aria-label="Next section"
           >
-            <ChevronRight size={20} className="text-gray-600 dark:text-gray-300" />
+            <ChevronRight size={16} className="text-gray-600 dark:text-gray-300" />
           </button>
-        </>
-      )}
-
-      {/* Current section title */}
-      <div className="text-center mb-3">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-          {currentSection.keyword}
-        </h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          {currentIndex + 1} of {sections.length}
-        </p>
+        )}
+        {sections.length <= 1 && <div className="w-8" />}
       </div>
 
       {/* Swipeable container */}

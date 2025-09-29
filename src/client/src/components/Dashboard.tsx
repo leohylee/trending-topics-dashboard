@@ -70,7 +70,7 @@ export const Dashboard: React.FC = () => {
 
   const handleUpdateSection = (sectionId: string, updates: Partial<Section>) => {
     storage.updateSection(sectionId, updates);
-    setSections(prev => 
+    setSections(prev =>
       prev.map(s => s.id === sectionId ? { ...s, ...updates } : s)
     );
     setEditingSection(null);
