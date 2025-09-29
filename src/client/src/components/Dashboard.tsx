@@ -22,8 +22,10 @@ export const Dashboard: React.FC = () => {
     const checkIsMobile = () => {
       const userAgent = navigator.userAgent || navigator.vendor;
       const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
-      const isSmallScreen = window.innerWidth < 768;
-      setIsMobile(isMobileDevice || isSmallScreen);
+      const isSmallScreen = window.innerWidth <= 768;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const mobile = isMobileDevice || isSmallScreen || isTouchDevice;
+      setIsMobile(mobile);
     };
 
     checkIsMobile();

@@ -28,6 +28,12 @@ export const MobileSectionCarousel: React.FC<MobileSectionCarouselProps> = ({
 
   // Handle touch events for swiping
   const handleTouchStart = (e: React.TouchEvent) => {
+    // Don't start dragging if touch started on a button
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) {
+      isDragging.current = false;
+      return;
+    }
     startX.current = e.touches[0].clientX;
     isDragging.current = true;
   };
@@ -135,7 +141,7 @@ export const MobileSectionCarousel: React.FC<MobileSectionCarouselProps> = ({
       {/* Swipeable container */}
       <div
         ref={containerRef}
-        className="h-full overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900"
+        className="h-full overflow-x-hidden overflow-y-auto rounded-lg bg-gray-50 dark:bg-gray-900"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -152,7 +158,7 @@ export const MobileSectionCarousel: React.FC<MobileSectionCarouselProps> = ({
           {sections.map((section) => {
             const query = getSectionQuery(section.id);
             return (
-              <div key={section.id} className="w-full flex-shrink-0 h-full bg-gray-50 dark:bg-gray-900">
+              <div key={section.id} className="w-full flex-shrink-0 h-full bg-gray-50 dark:bg-gray-900 relative">
                 <TrendingSection
                   section={section}
                   data={query?.data}

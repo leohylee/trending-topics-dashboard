@@ -44,7 +44,7 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 h-full flex flex-col transition-colors ${isMobileCarousel ? 'border-0 shadow-none' : ''}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 h-full flex flex-col transition-colors ${isMobileCarousel ? 'border-0 shadow-none relative' : ''}`}>
       {!isMobileCarousel && (
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
           <div className="flex items-center gap-2">
@@ -103,6 +103,8 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
                 e.stopPropagation();
                 onRefresh(section.keyword);
               }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onTouchStart={(e) => e.stopPropagation()}
               disabled={isRefreshing}
               className="p-2 bg-white dark:bg-gray-800 text-blue-500 hover:text-blue-700 shadow-md rounded-full border border-gray-200 dark:border-gray-600 transition-colors disabled:opacity-50"
               title={isRefreshing ? 'Refreshing...' : 'Refresh this section'}
@@ -115,10 +117,24 @@ export const TrendingSection: React.FC<TrendingSectionProps> = ({
               e.stopPropagation();
               onSettings(section);
             }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             className="p-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 shadow-md rounded-full border border-gray-200 dark:border-gray-600 transition-colors"
             title="Settings"
           >
             <Settings size={18} />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(section.id);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
+            className="p-2 bg-white dark:bg-gray-800 text-red-500 hover:text-red-700 shadow-md rounded-full border border-gray-200 dark:border-gray-600 transition-colors"
+            title="Remove section"
+          >
+            <Trash2 size={18} />
           </button>
         </div>
       )}
