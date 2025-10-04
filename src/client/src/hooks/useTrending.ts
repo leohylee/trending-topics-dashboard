@@ -124,12 +124,31 @@ export const useTrendingSectionWithRetention = (section: Section) => {
 // Progressive loading hook that manages individual sections
 export const useProgressiveTrendingWithRetention = (sections: Section[]) => {
   // Safety check: ensure sections is a valid array
-  if (!sections || !Array.isArray(sections)) {
-    return [];
-  }
+  const safeSections = sections && Array.isArray(sections) ? sections : [];
 
-  return sections.map(section => ({
+  // Use a single query that fetches all sections together
+  const { data, isLoading, error } = useQuery({
+    queryKey: [
+      'trending-progressive',
+      safeSections.map(s => ({
+        keyword: s.keyword,
+        retention: s.cacheRetention
+      }))
+    ],
+    queryFn: async () => {
+      if (safeSections.length === 0) return [];
+      return await trendingApi.getTrendingWithRetention(safeSections);
+    },
+    enabled: safeSections.length > 0,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 3,
+  });
+
+  // Map the data back to individual section results
+  return safeSections.map((section, index) => ({
     section,
-    ...useTrendingSectionWithRetention(section)
+    data: data?.[index],
+    isLoading,
+    error
   }));
 };
