@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { RefreshCw, Settings, Plus } from 'lucide-react';
 import { TrendingSection } from './TrendingSection';
+import { MobileSectionCarousel } from './MobileSectionCarousel';
 import { SettingsModal } from './SettingsModal';
 import { ThemeToggle } from './ThemeToggle';
 import { useProgressiveTrendingWithRetention, useRefreshSingleSectionWithRetention } from '../hooks/useTrending';
@@ -15,6 +16,22 @@ export const Dashboard: React.FC = () => {
   const [sections, setSections] = useState<Section[]>(() => storage.getSettings().sections);
   const [showSettings, setShowSettings] = useState(false);
   const [editingSection, setEditingSection] = useState<Section | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  // Detect mobile devices
+  useEffect(() => {
+    const checkIsMobile = () => {
+      const userAgent = navigator.userAgent || navigator.vendor;
+      const isMobileDevice = /android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent.toLowerCase());
+      const isSmallScreen = window.innerWidth <= 768;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      const mobile = isMobileDevice || isSmallScreen || isTouchDevice;
+      setIsMobile(mobile);
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   // Use progressive loading - each section loads independently
   const sectionQueries = useProgressiveTrendingWithRetention(sections);
@@ -53,7 +70,7 @@ export const Dashboard: React.FC = () => {
 
   const handleUpdateSection = (sectionId: string, updates: Partial<Section>) => {
     storage.updateSection(sectionId, updates);
-    setSections(prev => 
+    setSections(prev =>
       prev.map(s => s.id === sectionId ? { ...s, ...updates } : s)
     );
     setEditingSection(null);
@@ -128,41 +145,53 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div
+      className={`${isMobile ? 'h-screen' : 'min-h-screen'} bg-gray-50 dark:bg-gray-900 transition-colors ${isMobile ? 'overflow-hidden' : ''}`}
+      style={isMobile ? {
+        overscrollBehavior: 'none',
+        WebkitOverflowScrolling: 'touch',
+        touchAction: 'pan-x pan-y'
+      } : {}}
+    >
+      <header className={`bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 ${isMobile ? 'sticky top-0 z-50' : ''}`}>
+        <div className={`${isMobile ? 'px-3 py-2' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'}`}>
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Trending Topics
+            <h1 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-gray-900 dark:text-white`}>
+              {isMobile ? 'Trending' : 'Trending Topics'}
             </h1>
-            <div className="flex items-center gap-3">
-              {hasAnySectionLoading && (
+            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'}`}>
+              {hasAnySectionLoading && isMobile && (
+                <div className="w-4 h-4 border-2 border-blue-600 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+              )}
+              {hasAnySectionLoading && !isMobile && (
                 <div className="text-sm text-blue-600 dark:text-blue-400 animate-pulse">
                   Loading sections...
                 </div>
               )}
               <ThemeToggle />
-              <button
-                onClick={handleRefresh}
-                disabled={refreshSingleMutation.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
-              >
-                <RefreshCw size={16} className={refreshSingleMutation.isPending ? 'animate-spin' : ''} />
-                {refreshSingleMutation.isPending ? 'Refreshing...' : 'Refresh All'}
-              </button>
+              {!isMobile && (
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshSingleMutation.isPending}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                >
+                  <RefreshCw size={16} className={refreshSingleMutation.isPending ? 'animate-spin' : ''} />
+                  {refreshSingleMutation.isPending ? 'Refreshing...' : 'Refresh All'}
+                </button>
+              )}
               <button
                 onClick={() => setShowSettings(true)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                className={`flex items-center gap-2 ${isMobile ? 'p-2' : 'px-4 py-2'} text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors`}
               >
-                <Plus size={16} />
-                Add Section
+                <Plus size={isMobile ? 18 : 16} />
+                {!isMobile && 'Add Section'}
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className={`${isMobile ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'}`}>
         {sections.length === 0 ? (
           <div className="text-center py-12">
             <Settings size={48} className="mx-auto text-gray-400 dark:text-gray-500 mb-4" />
@@ -175,6 +204,23 @@ export const Dashboard: React.FC = () => {
               <Plus size={20} />
               Add Section
             </button>
+          </div>
+        ) : isMobile ? (
+          <div
+            className="fixed inset-x-0 top-[60px] bottom-0 px-4 overflow-hidden"
+            style={{
+              overscrollBehavior: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            <MobileSectionCarousel
+              sections={sections}
+              getSectionQuery={getSectionQuery}
+              onRemove={handleRemoveSection}
+              onSettings={handleSectionSettings}
+              onRefresh={handleSingleRefresh}
+              refreshSingleMutation={refreshSingleMutation}
+            />
           </div>
         ) : (
           <ResponsiveGridLayout
