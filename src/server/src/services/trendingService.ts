@@ -129,17 +129,23 @@ export class TrendingService {
   }
 
   private async fetchFreshData(keywords: string[]): Promise<TrendingData[]> {
-    const keywordTopics = await this.openaiService.getTrendingTopics(
-      keywords,
-      APP_LIMITS.maxResultsPerKeyword
-    );
+    try {
+      const keywordTopics = await this.openaiService.getTrendingTopics(
+        keywords,
+        APP_LIMITS.maxResultsPerKeyword
+      );
 
-    return keywordTopics.map(item => ({
-      keyword: item.keyword,
-      topics: item.topics.slice(0, APP_LIMITS.maxResultsPerKeyword),
-      lastUpdated: new Date(),
-      cached: false
-    }));
+      return keywordTopics.map(item => ({
+        keyword: item.keyword,
+        topics: item.topics.slice(0, APP_LIMITS.maxResultsPerKeyword),
+        lastUpdated: new Date(),
+        cached: false
+      }));
+    } catch (error: any) {
+      console.error('Error in fetchFreshData:', error);
+      // If there's a timeout or API error, return fallback data
+      return keywords.map(keyword => this.getFallbackData(keyword));
+    }
   }
 
   private isCacheValid(data: TrendingData): boolean {

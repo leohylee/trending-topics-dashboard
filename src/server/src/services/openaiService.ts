@@ -19,30 +19,50 @@ export class OpenAIService {
   async getTrendingTopics(keywords: string[], maxResults: number = 3): Promise<KeywordTopics[]> {
     try {
       console.log(`🌐 WEB SEARCH MODE: Fetching real-time trending information from the internet for ${keywords.length} keywords`);
-      
-      // Process each keyword with web search to get real, current information
-      const results: KeywordTopics[] = [];
-      
-      for (const keyword of keywords) {
-        try {
-          console.log(`🔍 Searching internet for real-time trending topics about: "${keyword}"`);
-          const keywordResults = await this.getWebSearchTrendingTopics(keyword, maxResults);
-          results.push(keywordResults);
-        } catch (error) {
-          console.error(`Error getting web search results for "${keyword}":`, error);
-          results.push({
-            keyword,
-            topics: this.getFallbackTopics(keyword)
-          });
-        }
-      }
-      
+
+      // Process keywords in parallel with timeout protection
+      const timeoutMs = 20000; // 20 seconds timeout per keyword
+      const results = await Promise.all(
+        keywords.map(async (keyword) => {
+          try {
+            console.log(`🔍 Searching internet for real-time trending topics about: "${keyword}"`);
+            const keywordResults = await this.withTimeout(
+              this.getWebSearchTrendingTopics(keyword, maxResults),
+              timeoutMs,
+              keyword
+            );
+            return keywordResults;
+          } catch (error) {
+            console.error(`Error getting web search results for "${keyword}":`, error);
+            return {
+              keyword,
+              topics: this.getFallbackTopics(keyword)
+            };
+          }
+        })
+      );
+
       console.log(`✅ Web search completed for all ${keywords.length} keywords`);
       return results;
     } catch (error) {
       console.error('Web search error:', error);
       throw new Error('Failed to fetch real-time trending topics from web search');
     }
+  }
+
+  private async withTimeout<T>(
+    promise: Promise<T>,
+    timeoutMs: number,
+    keyword: string
+  ): Promise<T> {
+    return Promise.race([
+      promise,
+      new Promise<T>((_, reject) =>
+        setTimeout(() => {
+          reject(new Error(`Timeout after ${timeoutMs}ms for keyword: ${keyword}`));
+        }, timeoutMs)
+      )
+    ]);
   }
 
 

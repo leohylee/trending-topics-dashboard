@@ -117,7 +117,7 @@ create_lambda_function() {
         --role "arn:aws:iam::$AWS_ACCOUNT_ID:role/$ROLE_NAME" \
         --handler "$handler_file.handler" \
         --zip-file "fileb://$LAMBDA_BUILD_DIR/$DEPLOYMENT_PACKAGE" \
-        --timeout 25 \
+        --timeout 28 \
         --memory-size 1024 \
         --environment "Variables={OPENAI_API_KEY=$OPENAI_API_KEY,OPENAI_MODEL=gpt-4o-mini,NODE_ENV=production,DYNAMODB_TABLE_NAME=TrendingCache,OPENAI_WEB_SEARCH_ENABLED=true,OPENAI_TEMPERATURE=0.3,OPENAI_MAX_TOKENS=3000}" > /dev/null
     
@@ -141,7 +141,7 @@ update_lambda_function() {
     print_status "Updating function configuration: $func_name"
     aws lambda update-function-configuration \
         --function-name "$func_name" \
-        --timeout 25 \
+        --timeout 28 \
         --memory-size 1024 \
         --environment "Variables={OPENAI_API_KEY=$OPENAI_API_KEY,OPENAI_MODEL=gpt-4o-mini,NODE_ENV=production,DYNAMODB_TABLE_NAME=TrendingCache,OPENAI_WEB_SEARCH_ENABLED=true,OPENAI_TEMPERATURE=0.3,OPENAI_MAX_TOKENS=3000}" > /dev/null
     
@@ -163,7 +163,7 @@ echo "  • Source: src/server (Express controllers → Lambda handlers)"
 echo "  • Functions deployed: ${#FUNCTIONS[@]}"
 echo "  • Runtime: Node.js 18.x"
 echo "  • Memory: 1024 MB (optimized for performance)"
-echo "  • Timeout: 25 seconds (under API Gateway limit)"
+echo "  • Timeout: 28 seconds (optimized for API Gateway 29s limit)"
 echo ""
 print_status "Environment Variables Set:"
 echo "  • OPENAI_MODEL: gpt-4o-mini"
