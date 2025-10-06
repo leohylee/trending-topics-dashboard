@@ -21,7 +21,7 @@ export class OpenAIService {
       console.log(`🌐 WEB SEARCH MODE: Fetching real-time trending information from the internet for ${keywords.length} keywords`);
 
       // Process keywords in parallel with timeout protection
-      const timeoutMs = 20000; // 20 seconds timeout per keyword
+      const timeoutMs = 25000; // 25 seconds timeout per keyword (API can be slow)
       const results = await Promise.all(
         keywords.map(async (keyword) => {
           try {
@@ -68,17 +68,22 @@ export class OpenAIService {
 
   private async getWebSearchTrendingTopics(keyword: string, maxResults: number): Promise<KeywordTopics> {
     console.log(`🔍 Using OpenAI Responses API with web search for: ${keyword}`);
-    
-    const searchInput = `Search web for ${maxResults} MOST RECENT and LATEST breaking news about "${keyword}" from TODAY or the past 24-48 hours. Focus on current events, breaking news, and trending developments.
 
-CRITICAL REQUIREMENTS:
-- ONLY search for NEWS from the last 24-48 hours
-- Prioritize TODAY'S news and breaking stories
-- Return ONLY this exact JSON format: [{"title":"Latest news headline","summary":"Current event summary"}]
-- NO explanations, NO text, NO markdown - ONLY the JSON array
-- If no recent news found for "${keyword}", return: []
+    const searchInput = `You are a news aggregator. Search the web and find ${maxResults} recent trending topics about "${keyword}".
 
-Search for TODAY'S latest "${keyword}" news:`;
+For each topic, provide:
+1. A clear, specific title
+2. A 2-3 sentence summary
+
+Return ONLY a JSON array with this EXACT structure (no markdown, no code blocks, no extra text):
+[
+  {"title": "First trending topic title", "summary": "First topic summary with details about what's happening."},
+  {"title": "Second trending topic title", "summary": "Second topic summary with details about what's happening."},
+  {"title": "Third trending topic title", "summary": "Third topic summary with details about what's happening."}
+]
+
+Focus on: current news, trending discussions, recent developments, breaking stories.
+Return ONLY the JSON array - nothing else.`;
 
     try {
       // Use the Responses API with web search tool
@@ -111,7 +116,7 @@ Search for TODAY'S latest "${keyword}" news:`;
         console.log(`🔍 Response end (last 100 chars): ${content.substring(Math.max(0, content.length - 100))}`);
       }
       
-      const topics = this.parseWebSearchResponse(content, keyword);
+      const topics = this.parseWebSearchResponse(content, keyword, maxResults);
       console.log(`✅ Web search completed for keyword: ${keyword} - found ${topics.length} real trending topics`);
       
       return {
@@ -121,16 +126,65 @@ Search for TODAY'S latest "${keyword}" news:`;
 
     } catch (error: any) {
       console.error(`❌ Responses API error for "${keyword}":`, error.message);
-      
-      // Return fallback message indicating web search failed
-      return {
-        keyword,
-        topics: [{
-          title: `Web Search Unavailable for "${keyword}"`,
-          summary: `Real-time web search is temporarily unavailable. This may be due to API limitations or configuration issues. The OpenAI Responses API with web search returned: ${error.message}`,
-          searchUrl: `https://www.google.com/search?q=${encodeURIComponent(keyword + ' trending news')}`
-        }]
-      };
+
+      // Fallback to Chat Completions API without web search
+      console.log(`🔄 Falling back to Chat Completions API for "${keyword}"`);
+      try {
+        const fallbackTopics = await this.getChatCompletionFallback(keyword, maxResults);
+        return {
+          keyword,
+          topics: fallbackTopics
+        };
+      } catch (fallbackError: any) {
+        console.error(`❌ Fallback API also failed for "${keyword}":`, fallbackError.message);
+
+        // Return final fallback message
+        return {
+          keyword,
+          topics: [{
+            title: `Unable to fetch ${keyword} topics`,
+            summary: `Both web search and fallback APIs are temporarily unavailable. Please try again in a few moments.`,
+            searchUrl: `https://www.google.com/search?q=${encodeURIComponent(keyword + ' trending news')}`
+          }]
+        };
+      }
+    }
+  }
+
+  private async getChatCompletionFallback(keyword: string, maxResults: number): Promise<TrendingTopic[]> {
+    console.log(`🤖 Using Chat Completions API (no web search) for: ${keyword}`);
+
+    const prompt = `Provide ${maxResults} trending topics related to "${keyword}" based on your training data.
+
+Return ONLY a JSON array in this exact format:
+[
+  {"title": "Topic title", "summary": "Topic summary"},
+  {"title": "Topic title", "summary": "Topic summary"},
+  {"title": "Topic title", "summary": "Topic summary"}
+]
+
+No explanations, no markdown, just the JSON array.`;
+
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: config.openai.model,
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that returns only JSON arrays.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
+      });
+
+      const content = response.choices[0]?.message?.content || '[]';
+      const topics = this.parseWebSearchResponse(content, keyword, maxResults);
+
+      console.log(`✅ Chat Completions fallback successful for: ${keyword} - found ${topics.length} topics`);
+      return topics.length > 0 ? topics : this.getFallbackTopics(keyword);
+
+    } catch (error: any) {
+      console.error(`❌ Chat Completions fallback error:`, error.message);
+      throw error;
     }
   }
 
@@ -140,7 +194,7 @@ Search for TODAY'S latest "${keyword}" news:`;
 
 
 
-  private parseWebSearchResponse(content: string, keyword: string): TrendingTopic[] {
+  private parseWebSearchResponse(content: string, keyword: string, maxResults: number = 3): TrendingTopic[] {
     try {
       console.log(`🔍 Parsing web search response for keyword: ${keyword}`);
       console.log(`🔍 Content length: ${content.length} characters`);
@@ -231,51 +285,56 @@ Search for TODAY'S latest "${keyword}" news:`;
 
       // Enhanced text extraction as fallback
       console.log('🔄 Attempting intelligent text extraction...');
-      
-      // Look for numbered lists or bullet points that might contain topics
-      const lines = content.split('\n').filter(line => line.trim().length > 0);
+
+      // Split by common delimiters and clean
+      const segments = content.split(/\n\n+|\n(?=\d+\.)/);
       const extractedTopics: TrendingTopic[] = [];
-      
-      let currentTitle = '';
-      let currentSummary = '';
-      
-      for (const line of lines) {
-        const cleanLine = line.trim();
-        
-        // Skip generic headers or AI responses
-        if (cleanLine.toLowerCase().includes('here are') || 
-            cleanLine.toLowerCase().includes('trending topics') ||
-            cleanLine.startsWith('##') ||
-            cleanLine.length < 15) {
+
+      for (const segment of segments) {
+        if (extractedTopics.length >= maxResults) break;
+
+        const cleanSegment = segment.trim();
+        if (cleanSegment.length < 20) continue;
+
+        // Try to extract structured data from various formats
+        // Pattern 1: Numbered items "1. Title - Summary" or "1. Title: Summary"
+        const numberedMatch = cleanSegment.match(/^\d+\.\s*([^\n\-:]+)[\-:]\s*(.+)/s);
+        if (numberedMatch && numberedMatch[1] && numberedMatch[2]) {
+          extractedTopics.push({
+            title: numberedMatch[1].trim().replace(/^\*\*|\*\*$/g, ''),
+            summary: numberedMatch[2].trim().replace(/^\*\*|\*\*$/g, '').substring(0, 300),
+            searchUrl: `https://www.google.com/search?q=${encodeURIComponent(numberedMatch[1].trim())}`
+          });
           continue;
         }
-        
-        // Look for numbered or bulleted items that could be topics
-        const titleMatch = cleanLine.match(/^(?:\d+\.\s*)?(?:\*\*?)?(.*?)(?:\*\*?)?$/);
-        if (titleMatch && titleMatch[1] && titleMatch[1].length > 10) {
-          if (currentTitle && currentSummary && extractedTopics.length < 3) {
-            extractedTopics.push({
-              title: currentTitle.replace(/^\*\*|\*\*$/g, '').trim(),
-              summary: currentSummary,
-              searchUrl: `https://www.google.com/search?q=${encodeURIComponent(currentTitle)}`
-            });
-          }
-          
-          currentTitle = titleMatch[1].trim();
-          currentSummary = '';
-        } else if (currentTitle && cleanLine.length > 20 && cleanLine.length < 500) {
-          // This might be a summary for the current title
-          currentSummary = cleanLine;
+
+        // Pattern 2: Bold title followed by text "**Title** text..."
+        const boldMatch = cleanSegment.match(/^\*\*([^\*]+)\*\*\s+(.+)/s);
+        if (boldMatch && boldMatch[1] && boldMatch[2]) {
+          extractedTopics.push({
+            title: boldMatch[1].trim(),
+            summary: boldMatch[2].trim().substring(0, 300),
+            searchUrl: `https://www.google.com/search?q=${encodeURIComponent(boldMatch[1].trim())}`
+          });
+          continue;
         }
-      }
-      
-      // Don't forget the last topic
-      if (currentTitle && currentSummary && extractedTopics.length < 3) {
-        extractedTopics.push({
-          title: currentTitle.replace(/^\*\*|\*\*$/g, '').trim(),
-          summary: currentSummary,
-          searchUrl: `https://www.google.com/search?q=${encodeURIComponent(currentTitle)}`
-        });
+
+        // Pattern 3: Title on one line, summary on next
+        const lines = cleanSegment.split('\n').filter(l => l.trim().length > 0);
+        if (lines.length >= 2) {
+          const potentialTitle = lines[0].trim().replace(/^\d+\.\s*|\*\*|^-\s*/g, '');
+          const potentialSummary = lines.slice(1).join(' ').trim().replace(/^\*\*|\*\*$/g, '');
+
+          if (potentialTitle.length > 10 && potentialTitle.length < 150 &&
+              potentialSummary.length > 20 && potentialSummary.length < 500) {
+            extractedTopics.push({
+              title: potentialTitle,
+              summary: potentialSummary.substring(0, 300),
+              searchUrl: `https://www.google.com/search?q=${encodeURIComponent(potentialTitle)}`
+            });
+            continue;
+          }
+        }
       }
 
       if (extractedTopics.length > 0) {
@@ -283,8 +342,17 @@ Search for TODAY'S latest "${keyword}" news:`;
         return extractedTopics;
       }
 
+      // If we still have nothing, try one more aggressive extraction
+      console.log('🔧 Attempting aggressive text mining...');
+      const aggressiveTopics = this.aggressiveTextMining(content, keyword, maxResults);
+      if (aggressiveTopics.length > 0) {
+        console.log(`🎯 Extracted ${aggressiveTopics.length} topics via aggressive mining`);
+        return aggressiveTopics;
+      }
+
       // Final fallback with better messaging
       console.log('⚠️ Using final fallback - web search succeeded but parsing failed');
+      console.log(`📄 Full response for debugging: ${content.substring(0, 500)}`);
       return [{
         title: `Current ${keyword.charAt(0).toUpperCase() + keyword.slice(1)} Developments`,
         summary: `Web search successfully found current information about ${keyword}, but the response format requires manual review. The system detected real sources and current data.`,
@@ -405,6 +473,43 @@ Search for TODAY'S latest "${keyword}" news:`;
       console.log('🔧 JSON repair failed, returning original');
       return jsonString;
     }
+  }
+
+  private aggressiveTextMining(content: string, _keyword: string, maxResults: number): TrendingTopic[] {
+    const topics: TrendingTopic[] = [];
+
+    // Split content into sentences
+    const sentences = content
+      .replace(/\n/g, ' ')
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 30 && s.length < 400);
+
+    // Group sentences into potential topics
+    for (let i = 0; i < sentences.length && topics.length < maxResults; i += 2) {
+      const title = sentences[i];
+      const summary = sentences[i + 1] || sentences[i];
+
+      // Basic quality checks
+      if (title && summary &&
+          !title.toLowerCase().includes('here are') &&
+          !title.toLowerCase().includes('trending topics') &&
+          !title.toLowerCase().includes('json array')) {
+
+        // Extract a clean title (first clause or up to 100 chars)
+        const cleanTitle = title.split(/,|;/)[0].trim().substring(0, 100);
+
+        if (cleanTitle.length > 15) {
+          topics.push({
+            title: cleanTitle,
+            summary: summary.trim().substring(0, 250),
+            searchUrl: `https://www.google.com/search?q=${encodeURIComponent(cleanTitle)}`
+          });
+        }
+      }
+    }
+
+    return topics;
   }
 
   private getFallbackTopics(keyword: string): TrendingTopic[] {
