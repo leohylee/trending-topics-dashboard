@@ -21,7 +21,7 @@ export class OpenAIService {
       console.log(`🌐 WEB SEARCH MODE: Fetching real-time trending information from the internet for ${keywords.length} keywords`);
 
       // Process keywords in parallel with timeout protection
-      const timeoutMs = 25000; // 25 seconds timeout per keyword (API can be slow)
+      const timeoutMs = 27000; // 27 seconds timeout per keyword (web search takes time)
       const results = await Promise.all(
         keywords.map(async (keyword) => {
           try {
@@ -69,21 +69,16 @@ export class OpenAIService {
   private async getWebSearchTrendingTopics(keyword: string, maxResults: number): Promise<KeywordTopics> {
     console.log(`🔍 Using OpenAI Responses API with web search for: ${keyword}`);
 
-    const searchInput = `You are a news aggregator. Search the web and find ${maxResults} recent trending topics about "${keyword}".
+    const searchInput = `Search the web for ${maxResults} current trending topics about "${keyword}".
 
-For each topic, provide:
-1. A clear, specific title
-2. A 2-3 sentence summary
+Return ONLY this JSON format:
+[{"title":"topic title","summary":"brief summary"}]
 
-Return ONLY a JSON array with this EXACT structure (no markdown, no code blocks, no extra text):
-[
-  {"title": "First trending topic title", "summary": "First topic summary with details about what's happening."},
-  {"title": "Second trending topic title", "summary": "Second topic summary with details about what's happening."},
-  {"title": "Third trending topic title", "summary": "Third topic summary with details about what's happening."}
-]
-
-Focus on: current news, trending discussions, recent developments, breaking stories.
-Return ONLY the JSON array - nothing else.`;
+Requirements:
+- Current/recent topics only
+- Real web search results
+- Brief summaries (1-2 sentences)
+- Valid JSON array only, no extra text`;
 
     try {
       // Use the Responses API with web search tool
@@ -97,7 +92,10 @@ Return ONLY the JSON array - nothing else.`;
           {
             type: "web_search_preview"
           }
-        ]
+        ],
+        // Add parameters to potentially speed up response
+        max_output_tokens: 2000, // Limit output to speed up generation
+        temperature: 0.3
       });
 
 
