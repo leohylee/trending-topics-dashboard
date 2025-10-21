@@ -69,16 +69,21 @@ export class OpenAIService {
   private async getWebSearchTrendingTopics(keyword: string, maxResults: number): Promise<KeywordTopics> {
     console.log(`🔍 Using OpenAI Responses API with web search for: ${keyword}`);
 
-    const searchInput = `Search the web for ${maxResults} current trending topics about "${keyword}".
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
 
-Return ONLY this JSON format:
-[{"title":"topic title","summary":"brief summary"}]
+    const searchInput = `Today is ${today}. Search the web for ${maxResults} REAL, CURRENT trending topics about "${keyword}".
 
-Requirements:
-- Current/recent topics only
-- Real web search results
-- Brief summaries (1-2 sentences)
-- Valid JSON array only, no extra text`;
+CRITICAL REQUIREMENTS:
+- ONLY use factual information from actual web search results
+- Topics must be from the last 7 days
+- Each topic MUST include a real source URL from the web search
+- DO NOT make up or fabricate any news
+- If you cannot find real current topics, return fewer results
+
+Return ONLY a raw JSON array - NO markdown, NO code blocks, NO backticks, NO explanations.
+Format: [{"title":"exact headline from source","summary":"factual summary from source","sourceUrl":"actual URL from web search"}]
+
+Start your response directly with [ and end with ]. Nothing else.`;
 
     try {
       // Use the Responses API with web search tool
@@ -258,7 +263,8 @@ No explanations, no markdown, just the JSON array.`;
                 const topics = validTopics.map((topic: any) => ({
                   title: topic.title.trim(),
                   summary: topic.summary.trim(),
-                  searchUrl: `https://www.google.com/search?q=${encodeURIComponent(topic.title.trim())}`
+                  searchUrl: `https://www.google.com/search?q=${encodeURIComponent(topic.title.trim())}`,
+                  sourceUrl: topic.sourceUrl // Preserve actual source URL from web search
                 }));
 
                 console.log(`🌐 Successfully parsed ${topics.length} valid trending topics from JSON`);

@@ -45,14 +45,26 @@ export const useRefreshTrendingWithRetention = () => {
 // Refresh single section with cache retention support
 export const useRefreshSingleSectionWithRetention = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (section: Section) => trendingApi.refreshSingleSectionWithRetention(section),
     onSuccess: (newData: TrendingData, section: Section) => {
-      // Update with-retention query data
+      // Update progressive query data (the one actually used by Dashboard)
+      queryClient.setQueriesData(
+        { queryKey: ['trending-progressive'] },
+        (oldData: TrendingData[] | undefined) => {
+          if (!oldData || !Array.isArray(oldData)) return oldData;
+
+          return oldData.map((item: TrendingData) =>
+            item.keyword === section.keyword ? newData : item
+          );
+        }
+      );
+
+      // Also update other query variants for compatibility
       queryClient.setQueriesData(
         { queryKey: ['trending-with-retention'] },
-        (oldData: TrendingData[]) => {
+        (oldData: TrendingData[] | undefined) => {
           if (!oldData || !Array.isArray(oldData)) return oldData;
 
           return oldData.map((item: TrendingData) =>
@@ -72,18 +84,13 @@ export const useRefreshSingleSectionWithRetention = () => {
         newData
       );
 
-      // Invalidate all trending queries
+      // Invalidate all trending queries to force refetch
       queryClient.invalidateQueries({
         queryKey: ['trending'],
       });
 
-      // Invalidate cache queries since TTL might have changed
-      queryClient.invalidateQueries({
-        queryKey: ['cache'],
-      });
-
       if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        console.log(`✅ Refreshed single section with retention: ${section.keyword}`);
+        console.log(`✅ Refreshed single section: ${section.keyword}`, newData);
       }
     },
   });

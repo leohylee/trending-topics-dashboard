@@ -10,6 +10,7 @@ export interface TrendingTopic {
   title: string;
   summary: string;
   searchUrl: string;
+  sourceUrl?: string; // Actual URL from web search results
 }
 
 export interface TrendingData {
