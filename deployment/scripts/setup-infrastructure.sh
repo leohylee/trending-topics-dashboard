@@ -5,14 +5,14 @@
 
 set -e
 
-echo "🚀 Setting up AWS infrastructure for trends.leohyl.me..."
+echo "🚀 Setting up AWS infrastructure for trends.leohyl.app..."
 
 # Configuration
-BUCKET_NAME="trends-leohyl-me"
+BUCKET_NAME="trends-leohyl-app"
 TABLE_NAME="TrendingCache"
 API_NAME="trending-topics-api"
-DOMAIN_NAME="trends.leohyl.me"
-HOSTED_ZONE_ID="${HOSTED_ZONE_ID:-}"  # Set this environment variable
+DOMAIN_NAME="trends.leohyl.app"
+HOSTED_ZONE_ID="${HOSTED_ZONE_ID:-Z10405232A9O7PPCBA791}"  # leohyl.app hosted zone
 
 # Colors for output
 RED='\033[0;31m'
@@ -204,17 +204,17 @@ fi
 
 # 5. Create CloudFront distribution (placeholder - requires manual SSL cert setup)
 print_status "CloudFront distribution setup required:"
-echo "  1. Request/verify SSL certificate for *.leohyl.me in ACM (us-east-1)"
+echo "  1. Request/verify SSL certificate for *.leohyl.app in ACM (us-east-1)"
 echo "  2. Create CloudFront distribution with:"
 echo "     - Origin: $BUCKET_NAME.s3-website-$AWS_REGION.amazonaws.com"
 echo "     - Alternate domain: $DOMAIN_NAME"
-echo "     - SSL certificate: *.leohyl.me"
+echo "     - SSL certificate: *.leohyl.app"
 echo "  3. Update Route 53 CNAME record for $DOMAIN_NAME"
 
 # Create resources summary
 print_status "Creating AWS resources summary..."
 cat > ../config/aws-resources.env << EOF
-# AWS Resources for trends.leohyl.me
+# AWS Resources for trends.leohyl.app
 AWS_ACCOUNT_ID=$AWS_ACCOUNT_ID
 AWS_REGION=$AWS_REGION
 S3_BUCKET_NAME=$BUCKET_NAME

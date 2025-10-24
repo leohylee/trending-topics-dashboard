@@ -5,12 +5,12 @@
 
 set -e
 
-echo "🚀 Deploying frontend to trends.leohyl.me..."
+echo "🚀 Deploying frontend to trends.leohyl.app..."
 
 # Configuration
-BUCKET_NAME="trends-leohyl-me"
+BUCKET_NAME="trends-leohyl-app"
 BUILD_DIR="../src/client/dist"
-DOMAIN_NAME="trends.leohyl.me"
+DOMAIN_NAME="trends.leohyl.app"
 
 # Colors for output
 RED='\033[0;31m'
@@ -68,8 +68,8 @@ fi
 # Update the API base URL to use the subdomain
 cat > src/config/index.ts << EOF
 export const API_CONFIG = {
-  baseUrl: process.env.NODE_ENV === 'production' 
-    ? 'https://trends.leohyl.me/api'
+  baseUrl: process.env.NODE_ENV === 'production'
+    ? 'https://trends.leohyl.app/api'
     : 'http://localhost:3002/api',
   timeout: 30000,
 };

@@ -3,7 +3,7 @@
     "Aliases": {
         "Quantity": 1,
         "Items": [
-            "trends.leohyl.me"
+            "trends.leohyl.app"
         ]
     },
     "DefaultRootObject": "index.html",
@@ -11,8 +11,8 @@
         "Quantity": 2,
         "Items": [
             {
-                "Id": "S3-trends-leohyl-me",
-                "DomainName": "trends-leohyl-me.s3-website.eu-west-2.amazonaws.com",
+                "Id": "S3-trends-leohyl-app",
+                "DomainName": "trends-leohyl-app.s3-website.eu-west-2.amazonaws.com",
                 "OriginPath": "",
                 "CustomHeaders": {
                     "Quantity": 0
@@ -74,7 +74,7 @@
         "Quantity": 0
     },
     "DefaultCacheBehavior": {
-        "TargetOriginId": "S3-trends-leohyl-me",
+        "TargetOriginId": "S3-trends-leohyl-app",
         "TrustedSigners": {
             "Enabled": false,
             "Quantity": 0
@@ -199,7 +199,7 @@
     "CustomErrorResponses": {
         "Quantity": 0
     },
-    "Comment": "Trending Topics Dashboard - trends.leohyl.me",
+    "Comment": "Trending Topics Dashboard - trends.leohyl.app",
     "Logging": {
         "Enabled": false,
         "IncludeCookies": false,
@@ -210,10 +210,10 @@
     "Enabled": true,
     "ViewerCertificate": {
         "CloudFrontDefaultCertificate": false,
-        "ACMCertificateArn": "arn:aws:acm:us-east-1:128844309521:certificate/1d0cc708-4e15-4a9c-bc61-aae746db62cf",
+        "ACMCertificateArn": "arn:aws:acm:us-east-1:128844309521:certificate/0c16edf2-e432-44df-a876-0669c9d87562",
         "SSLSupportMethod": "sni-only",
         "MinimumProtocolVersion": "TLSv1.2_2021",
-        "Certificate": "arn:aws:acm:us-east-1:128844309521:certificate/1d0cc708-4e15-4a9c-bc61-aae746db62cf",
+        "Certificate": "arn:aws:acm:us-east-1:128844309521:certificate/0c16edf2-e432-44df-a876-0669c9d87562",
         "CertificateSource": "acm"
     },
     "Restrictions": {

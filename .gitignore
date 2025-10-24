@@ -13,6 +13,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# AWS configuration (contains account ID and resource ARNs)
+deployment/config/aws-resources.env
+
 # Build outputs
 dist/
 build/
