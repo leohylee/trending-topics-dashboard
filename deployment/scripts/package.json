@@ -9,7 +9,7 @@
     "deploy:all": "npm run deploy:backend && npm run deploy:frontend",
     "logs:lambda": "aws logs tail /aws/lambda/trending-getTrending --follow",
     "invalidate:cloudfront": "aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths '/*'",
-    "check:health": "curl -s https://trends.leohyl.me/api/health | jq"
+    "check:health": "curl -s https://trends.leohyl.app/api/health | jq"
   },
   "keywords": [
     "aws",

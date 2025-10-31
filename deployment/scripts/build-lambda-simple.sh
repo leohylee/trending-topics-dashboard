@@ -138,7 +138,7 @@ function parseKeywords(keywordsParam) {
 function getCorsHeaders() {
     return {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://trends.leohyl.me',
+        'Access-Control-Allow-Origin': 'https://trends.leohyl.app',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };
@@ -203,7 +203,7 @@ function parseKeywords(keywordsParam) {
 function getCorsHeaders() {
     return {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://trends.leohyl.me',
+        'Access-Control-Allow-Origin': 'https://trends.leohyl.app',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };
@@ -249,7 +249,7 @@ exports.handler = async (event, context) => {
 function getCorsHeaders() {
     return {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://trends.leohyl.me',
+        'Access-Control-Allow-Origin': 'https://trends.leohyl.app',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };
@@ -293,7 +293,7 @@ exports.handler = async (event, context) => {
 function getCorsHeaders() {
     return {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://trends.leohyl.me',
+        'Access-Control-Allow-Origin': 'https://trends.leohyl.app',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };
@@ -365,7 +365,7 @@ function parseKeywords(keywordsParam) {
 function getCorsHeaders() {
     return {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': 'https://trends.leohyl.me',
+        'Access-Control-Allow-Origin': 'https://trends.leohyl.app',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     };

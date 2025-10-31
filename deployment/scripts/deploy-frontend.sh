@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Frontend Deployment Script for trends.leohyl.me
+# Frontend Deployment Script for trends.leohyl.app
 # Builds React app and deploys to S3 + CloudFront
 
 set -e

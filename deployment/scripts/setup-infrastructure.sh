@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# AWS Infrastructure Setup for trends.leohyl.me
+# AWS Infrastructure Setup for trends.leohyl.app
 # Run this script to create all AWS resources
 
 set -e

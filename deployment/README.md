@@ -1,11 +1,11 @@
 # AWS Deployment Guide - Trending Topics Dashboard
 
-> **Status**: ✅ **LIVE** at https://trends.leohyl.me
+> **Status**: ✅ **LIVE** at https://trends.leohyl.app
 
 ## 🏗️ Architecture Overview
 
 ```
-https://trends.leohyl.me → CloudFront (E3NVFF4VISSPTO) 
+https://trends.leohyl.app → CloudFront (E3NVFF4VISSPTO) 
     ├── / → S3 (trends-leohyl-me) → React Frontend
     └── /api/* → API Gateway (qfewncdzqi) → Lambda Functions → DynamoDB (TrendingCache)
 ```
@@ -83,7 +83,7 @@ npm run check:health    # Health check API
 - **AWS CLI** configured with appropriate credentials
 - **Node.js 18+** and npm installed
 - **OpenAI API key** (set as environment variable)
-- **Domain access**: `leohyl.me` hosted in Route 53
+- **Domain access**: `leohyl.app` hosted in Route 53
 
 ### AWS Permissions Required
 - S3 (bucket creation, file upload)
@@ -103,18 +103,18 @@ npm run check:health    # Health check API
   - Contains built React application
 
 - **CloudFront Distribution**: `E3NVFF4VISSPTO`
-  - Custom domain: `trends.leohyl.me`
-  - SSL: Wildcard certificate `*.leohyl.me`
+  - Custom domain: `trends.leohyl.app`
+  - SSL: Wildcard certificate `*.leohyl.app`
   - Origins: S3 + API Gateway
   - Cache behaviors: `/` → S3, `/api/*` → API Gateway
 
 - **Route 53 DNS**: 
   - Hosted Zone: `Z0465161YDUQ1IELA4X0`
-  - CNAME: `trends.leohyl.me` → `d278be1warhrf3.cloudfront.net`
+  - CNAME: `trends.leohyl.app` → `d278be1warhrf3.cloudfront.net`
 
 ### SSL Certificate
 - **ACM Certificate**: `arn:aws:acm:us-east-1:128844309521:certificate/1d0cc708-4e15-4a9c-bc61-aae746db62cf`
-- **Type**: Wildcard `*.leohyl.me` + `leohyl.me`
+- **Type**: Wildcard `*.leohyl.app` + `leohyl.app`
 - **Status**: ✅ ISSUED (DNS validated)
 
 ### Backend Services
@@ -184,7 +184,7 @@ The `deploy-frontend.sh` script:
 ### Health Checks
 ```bash
 # Production health check
-curl https://trends.leohyl.me/api/health
+curl https://trends.leohyl.app/api/health
 
 # API Gateway direct test
 curl https://qfewncdzqi.execute-api.eu-west-2.amazonaws.com/prod/health
@@ -279,5 +279,5 @@ aws logs describe-log-groups --log-group-name-prefix "API-Gateway"
 ---
 
 **Last Updated**: September 2025  
-**Production URL**: https://trends.leohyl.me  
+**Production URL**: https://trends.leohyl.app  
 **Status**: ✅ Active and Operational

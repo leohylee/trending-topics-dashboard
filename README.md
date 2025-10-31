@@ -368,7 +368,7 @@ cd deployment/scripts
 ./deploy-frontend.sh         # Deploy React frontend
 ```
 
-**Live deployment**: https://trends.leohyl.me
+**Live deployment**: https://trends.leohyl.app
 
 ---
 
